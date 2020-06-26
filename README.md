@@ -1,3 +1,3 @@
 # project-lai
 
-LOL AI
+Realtime Reinforcement Learning AI
