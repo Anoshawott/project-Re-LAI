@@ -1,12 +1,13 @@
-#cd /mnt/c/Users/anosh/Documents/GitHub/project-lai/
+#cd C:\Users\anosh\Documents\GitHub
 
 import numpy as np
 import pyautogui
-import quartz
 from pynput.mouse import Button, Controller
 import mss
 import mss.tools
 import cv2
+import pytesseract
+import re
 
 # # importing os module  
 # import os 
@@ -68,12 +69,44 @@ def screenshot(x, y, width, height
             result = cv2.cvtColor(np.array(img), cv2.COLOR_BGRA2BGR)
 
         img = result[::reduction_factor, ::reduction_factor]
-        return img
+        return img  
+
+img = screenshot(664, 1022, 15, 15)
 
 cv2.imshow('img', img)
-cv2.waitkey()
+cv2.waitKey()
 
 
+# Works in combination with screen get_score()* will interpret the image through OCR
+
+def get_score(threshold = 190, var = 10):
+
+    # got_it = False
+    
+    # while not got_it:
+        
+        # if is_dead():
+        #     return -1
+
+    img = screenshot(x= 664, y= 1022, width = 15, height = 15, gray = False)
+
+    for rows in range(0, len(img)):
+        for cols in range(0, len(img[0])):
+            x = img[rows][cols]
+            if x[0] > threshold and x[1] > threshold and x[2] > threshold and max(x) - min(x) < var:
+                img[rows][cols] = [0, 0, 0]
+            else:
+                img[rows][cols] = [255,255,255]
+    pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR'
+    score = pytesseract.image_to_string(img, config='outputbase digits')
+    
+    score = re.sub("[^0-9]", "", score)
+    
+    if score != "":            
+        score = int(score)
+        return score
+
+print(get_score())
 
 
 
