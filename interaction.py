@@ -48,6 +48,13 @@ mouse = Controller()
 
 
 
+
+
+
+
+
+
+
 # Following attempts to read and interpret on-screen information
 
 # screenshot() returns an image of some given area
@@ -87,9 +94,6 @@ def get_score(threshold = 190, var = 10):
         #     return -1
 
     img = screenshot(975, 718, 50, 20)
-    cv2.imwrite("test.png", img)
-    img = cv2.imread('test.png')
-    processed_img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
 
     # for rows in range(0, len(img)):
     #     for cols in range(0, len(img[0])):
@@ -99,17 +103,37 @@ def get_score(threshold = 190, var = 10):
     #         else:
     #             img[rows][cols] = [255,255,255]
     pytesseract.pytesseract.tesseract_cmd = r'C:\Users\anosh\AppData\Local\Tesseract-OCR\tesseract.exe'
-    score = pytesseract.image_to_string(processed_img)
+    score = pytesseract.image_to_string(img)
     print(score)
     
     if score != "":            
         score = int(score)
         return score
 
-print(get_score())
-cv2.imshow('img', img)
-cv2.waitKey()
+# print(get_score())
 
+
+
+
+
+
+
+# Applying a random position movement to player
+#TODO: will need to create a function that returns window_center once figured out how to
+# automate resizing and positioning of the application window
+
+def move_to_radians(radians, radius = 50):
+    
+    mouse.move(window_center_x + 50 * math.cos(radians)
+               , window_center_y + 50 * math.sin(radians))
+    
+    return radians
+
+
+
+
+# Finishing resizing the window and creating automating process to reset the game when each
+# episode is complete
 
 
 print('All works!')
