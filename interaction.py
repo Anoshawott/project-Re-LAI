@@ -3,6 +3,7 @@
 import numpy as np
 from DirectKeys import PressKey, ReleaseKey, Y, ESC
 import pyautogui
+from PIL import ImageGrab
 from pynput.mouse import Button, Controller
 import mss
 import mss.tools
@@ -10,8 +11,9 @@ import cv2
 import pytesseract
 import re
 import math
-import time
+from time import time
 import random
+from window_cap import WindowCapture
 
 # # importing os module  
 # import os 
@@ -94,13 +96,15 @@ def screenshot(x, y, width, height
 
 # Reading real-time onscreen data
 
-def realtime_capture():
+def realtime_capture(wincap):
     loop_time = time()
     while(True):
-        screenshot = pyautogui.screenshot()
-
+        
+        screenshot = wincap.get_screenshot()
+        
         cv2.imshow('Computer Vision', screenshot)
 
+        # debugging the loop rate
         print('FPS {}'.format(1/(time()-loop_time)))
         loop_time = time()
 
@@ -110,6 +114,9 @@ def realtime_capture():
 
     return print('Done.')
 
+wincap = WindowCapture('League of Legends (TM) Client')
+
+realtime_capture(wincap)
 
 
 
