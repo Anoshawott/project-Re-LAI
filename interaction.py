@@ -1,4 +1,4 @@
-#cd C:\Users\anosh\Documents\GitHub
+#cd C:\Users\anosh\Documents\GitHub\project-lai
 
 import numpy as np
 import pyautogui
@@ -71,11 +71,9 @@ def screenshot(x, y, width, height
         img = result[::reduction_factor, ::reduction_factor]
         return img  
 
-img = screenshot(664, 1022, 15, 15)
-
+img = screenshot(975, 718, 50, 20)
 cv2.imshow('img', img)
 cv2.waitKey()
-
 
 # Works in combination with screen get_score()* will interpret the image through OCR
 
@@ -88,25 +86,29 @@ def get_score(threshold = 190, var = 10):
         # if is_dead():
         #     return -1
 
-    img = screenshot(x= 664, y= 1022, width = 15, height = 15, gray = False)
+    img = screenshot(975, 718, 50, 20)
+    cv2.imwrite("test.png", img)
+    img = cv2.imread('test.png')
+    processed_img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
 
-    for rows in range(0, len(img)):
-        for cols in range(0, len(img[0])):
-            x = img[rows][cols]
-            if x[0] > threshold and x[1] > threshold and x[2] > threshold and max(x) - min(x) < var:
-                img[rows][cols] = [0, 0, 0]
-            else:
-                img[rows][cols] = [255,255,255]
-    pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR'
-    score = pytesseract.image_to_string(img, config='outputbase digits')
-    
-    score = re.sub("[^0-9]", "", score)
+    # for rows in range(0, len(img)):
+    #     for cols in range(0, len(img[0])):
+    #         x = img[rows][cols]
+    #         if x[0] > threshold and x[1] > threshold and x[2] > threshold and max(x) - min(x) < var:
+    #             img[rows][cols] = [0, 0, 0]
+    #         else:
+    #             img[rows][cols] = [255,255,255]
+    pytesseract.pytesseract.tesseract_cmd = r'C:\Users\anosh\AppData\Local\Tesseract-OCR\tesseract.exe'
+    score = pytesseract.image_to_string(processed_img)
+    print(score)
     
     if score != "":            
         score = int(score)
         return score
 
 print(get_score())
+cv2.imshow('img', img)
+cv2.waitKey()
 
 
 
