@@ -135,22 +135,23 @@ def get_score(threshold = 190, var = 10):
 # Starting game actions
 
 def buy_start_items():
-    mouse.position = (875, 404)
+    mouse.position = (768, 282)
     mouse.click(Button.left, 1)
+    time.sleep(1)
 
     mouse.position = (526, 247)
     mouse.click(Button.right, 1)
-    time.sleep(0.12)
-    mouse.position = (577, 247)
+    time.sleep(1)
+    mouse.position = (580, 247)
     mouse.click(Button.right, 1)
-    time.sleep(0.12)
+    time.sleep(1)
     mouse.position = (626, 247)
     mouse.click(Button.right, 1)
-    time.sleep(0.12)
+    time.sleep(1)
 
     PressKey(ESC)
     ReleaseKey(ESC)
-    time.sleep(0.12)
+    time.sleep(1)
 
 
 def top_game_start():
@@ -158,15 +159,15 @@ def top_game_start():
         print(i+1)
         time.sleep(1)
     
+    buy_start_items()
+
     PressKey(Y)
     ReleaseKey(Y)
     time.sleep(1)
 
-    buy_start_items()
-
     mouse.position = (1438, 744)
     mouse.click(Button.right, 1)
-    time.sleep(1)
+    time.sleep(30)
 
 top_game_start()
 
