@@ -8,6 +8,8 @@ import mss.tools
 import cv2
 import pytesseract
 import re
+import math
+import time
 
 # # importing os module  
 # import os 
@@ -78,9 +80,9 @@ def screenshot(x, y, width, height
         img = result[::reduction_factor, ::reduction_factor]
         return img  
 
-img = screenshot(975, 718, 50, 20)
-cv2.imshow('img', img)
-cv2.waitKey()
+# img = screenshot(975, 718, 50, 20)
+# cv2.imshow('img', img)
+# cv2.waitKey()
 
 # Works in combination with screen get_score()* will interpret the image through OCR
 
@@ -104,7 +106,7 @@ def get_score(threshold = 190, var = 10):
     #             img[rows][cols] = [255,255,255]
     pytesseract.pytesseract.tesseract_cmd = r'C:\Users\anosh\AppData\Local\Tesseract-OCR\tesseract.exe'
     score = pytesseract.image_to_string(img)
-    print(score)
+    # print(score)
     
     if score != "":            
         score = int(score)
@@ -122,18 +124,62 @@ def get_score(threshold = 190, var = 10):
 #TODO: will need to create a function that returns window_center once figured out how to
 # automate resizing and positioning of the application window
 
-def move_to_radians(radians, radius = 50):
+# def move_to_radians(radians, radius = 50):
     
-    mouse.move(window_center_x + 50 * math.cos(radians)
-               , window_center_y + 50 * math.sin(radians))
+#     mouse.move(window_center_x + 50 * math.cos(radians)
+#                , window_center_y + 50 * math.sin(radians))
     
-    return radians
+#     return radians
 
 
+# Starting game actions
 
+def buy_start_items(keyboard, mouse):
+    mouse.position = (875, 404)
+    mouse.click(Button.left, 1)
+
+    mouse.position = (526, 247)
+    mouse.click(Button.right, 1)
+    time.sleep(0.12)
+    mouse.position = (577, 247)
+    mouse.click(Button.right, 1)
+    time.sleep(0.12)
+    mouse.position = (626, 247)
+    mouse.click(Button.right, 1)
+    time.sleep(0.12)
+
+    keyboard.press(Key.esc)
+    keyboard.release(Key.esc)
+    time.sleep(0.12)
+
+
+def top_game_start(keyboard, mouse):
+    keyboard_tmp = keyboard
+    mouse_tmp = mouse
+
+    for i in list(range(4))[::-1]:
+        print(i+1)
+        time.sleep(1)
+    
+    pyautogui.keyDown('y')
+    pyautogui.keyUp('y')
+    time.sleep(1)
+
+    buy_start_items(keyboard_tmp, mouse_tmp)
+
+    mouse.position = (1438, 744)
+    mouse.click(Button.right, 1)
+    time.sleep(1)
+
+top_game_start(keyboard, mouse)
 
 # Finishing resizing the window and creating automating process to reset the game when each
 # episode is complete
+
+
+def game_end():
+    mouse.position = (947, 632)
+    mouse.click(Button.left, 1)
 
 
 print('All works!')
