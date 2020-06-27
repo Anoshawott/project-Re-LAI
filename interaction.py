@@ -1,7 +1,7 @@
 #cd C:\Users\anosh\Documents\GitHub\project-lai
 
 import numpy as np
-import pyautogui
+from DirectKeys import PressKey, ReleaseKey, Y, ESC
 from pynput.mouse import Button, Controller
 import mss
 import mss.tools
@@ -134,7 +134,7 @@ def get_score(threshold = 190, var = 10):
 
 # Starting game actions
 
-def buy_start_items(keyboard, mouse):
+def buy_start_items():
     mouse.position = (875, 404)
     mouse.click(Button.left, 1)
 
@@ -148,30 +148,27 @@ def buy_start_items(keyboard, mouse):
     mouse.click(Button.right, 1)
     time.sleep(0.12)
 
-    keyboard.press(Key.esc)
-    keyboard.release(Key.esc)
+    PressKey(ESC)
+    ReleaseKey(ESC)
     time.sleep(0.12)
 
 
-def top_game_start(keyboard, mouse):
-    keyboard_tmp = keyboard
-    mouse_tmp = mouse
-
+def top_game_start():
     for i in list(range(4))[::-1]:
         print(i+1)
         time.sleep(1)
     
-    pyautogui.keyDown('y')
-    pyautogui.keyUp('y')
+    PressKey(Y)
+    ReleaseKey(Y)
     time.sleep(1)
 
-    buy_start_items(keyboard_tmp, mouse_tmp)
+    buy_start_items()
 
     mouse.position = (1438, 744)
     mouse.click(Button.right, 1)
     time.sleep(1)
 
-top_game_start(keyboard, mouse)
+top_game_start()
 
 # Finishing resizing the window and creating automating process to reset the game when each
 # episode is complete
