@@ -2,6 +2,7 @@
 
 import numpy as np
 from DirectKeys import PressKey, ReleaseKey, Y, ESC
+import pyautogui
 from pynput.mouse import Button, Controller
 import mss
 import mss.tools
@@ -10,6 +11,7 @@ import pytesseract
 import re
 import math
 import time
+import random
 
 # # importing os module  
 # import os 
@@ -84,6 +86,41 @@ def screenshot(x, y, width, height
 # cv2.imshow('img', img)
 # cv2.waitKey()
 
+
+
+
+
+
+
+# Reading real-time onscreen data
+
+def realtime_capture():
+    loop_time = time()
+    while(True):
+        screenshot = pyautogui.screenshot()
+
+        cv2.imshow('Computer Vision', screenshot)
+
+        print('FPS {}'.format(1/(time()-loop_time)))
+        loop_time = time()
+
+        if cv2.waitKey(1) == ord('q'):
+            cv2.destroyAllWindows()
+            break
+
+    return print('Done.')
+
+
+
+
+
+
+
+
+
+
+
+
 # Works in combination with screen get_score()* will interpret the image through OCR
 
 def get_score(threshold = 190, var = 10):
@@ -95,7 +132,9 @@ def get_score(threshold = 190, var = 10):
         # if is_dead():
         #     return -1
 
-    img = screenshot(975, 718, 50, 20)
+    img = screenshot(883, 850, 30, 20)
+    cv2.imshow('img', img)
+    cv2.waitKey()
 
     # for rows in range(0, len(img)):
     #     for cols in range(0, len(img[0])):
@@ -106,13 +145,24 @@ def get_score(threshold = 190, var = 10):
     #             img[rows][cols] = [255,255,255]
     pytesseract.pytesseract.tesseract_cmd = r'C:\Users\anosh\AppData\Local\Tesseract-OCR\tesseract.exe'
     score = pytesseract.image_to_string(img)
-    # print(score)
-    
+
+    score = re.sub("[^0-9]", "", score)
+
     if score != "":            
         score = int(score)
         return score
 
-# print(get_score())
+get_score()
+
+
+
+
+# Check if dead
+def is_dead():
+    return None
+
+
+
 
 
 
@@ -126,58 +176,74 @@ def get_score(threshold = 190, var = 10):
 
 # def move_to_radians(radians, radius = 50):
     
-#     mouse.move(window_center_x + 50 * math.cos(radians)
-#                , window_center_y + 50 * math.sin(radians))
+#     mouse.move(947 + 50 * math.cos(radians)
+#                , 632 + 50 * math.sin(radians))
     
 #     return radians
 
 
-# Starting game actions
+# # Starting game actions
 
-def buy_start_items():
-    mouse.position = (768, 282)
-    mouse.click(Button.left, 1)
-    time.sleep(1)
+# def buy_start_items():
+#     mouse.position = (768, 282)
+#     mouse.click(Button.left, 1)
+#     time.sleep(1)
 
-    mouse.position = (526, 247)
-    mouse.click(Button.right, 1)
-    time.sleep(1)
-    mouse.position = (580, 247)
-    mouse.click(Button.right, 1)
-    time.sleep(1)
-    mouse.position = (626, 247)
-    mouse.click(Button.right, 1)
-    time.sleep(1)
+#     mouse.position = (526, 247)
+#     mouse.click(Button.left, 1)
+#     mouse.click(Button.right, 1)
+#     time.sleep(1)
+#     mouse.position = (580, 247)
+#     mouse.click(Button.left, 1)
+#     mouse.click(Button.right, 1)
+#     time.sleep(1)
+#     mouse.position = (626, 247)
+#     mouse.click(Button.left, 1)
+#     mouse.click(Button.right, 1)
+#     time.sleep(1)
 
-    PressKey(ESC)
-    ReleaseKey(ESC)
-    time.sleep(1)
+#     PressKey(ESC)
+#     ReleaseKey(ESC)
+#     time.sleep(1)
 
-
-def top_game_start():
-    for i in list(range(4))[::-1]:
-        print(i+1)
-        time.sleep(1)
+# def top_game_start():
+#     for i in list(range(4))[::-1]:
+#         print(i+1)
+#         time.sleep(1)
     
-    buy_start_items()
+#     buy_start_items()
 
-    PressKey(Y)
-    ReleaseKey(Y)
-    time.sleep(1)
+#     PressKey(Y)
+#     ReleaseKey(Y)
+#     time.sleep(1)
 
-    mouse.position = (1438, 744)
-    mouse.click(Button.right, 1)
-    time.sleep(30)
+#     mouse.position = (1438, 744)
+#     mouse.click(Button.right, 1)
+#     time.sleep(30)
 
-top_game_start()
+# top_game_start()
 
 # Finishing resizing the window and creating automating process to reset the game when each
 # episode is complete
 
 
-def game_end():
-    mouse.position = (947, 632)
-    mouse.click(Button.left, 1)
+# def game_end():
+#     mouse.position = (947, 632)
+#     mouse.click(Button.left, 1)
 
+
+# #     outer loop to control the number of data points gathered
+#     for i in range(0, 50000):
+        
+# #         if dead, reset the score and start a new game
+#         if is_dead():
+#             print('You are dead.  Starting the game over.')
+#             start_game()
+#             score = 10
+#             time.sleep(1)
+#         else:
+            
+# #             randomly change direction
+#             direction = move_to_radians(random.uniform(0, math.pi*2), random.uniform(0,300))
 
 print('All works!')
