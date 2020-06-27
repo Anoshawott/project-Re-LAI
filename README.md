@@ -1,2 +1,2 @@
 # project-lai
-Realtime Reinforcment Learning
+Real-time Reinforcment Learning AI
