@@ -14,24 +14,37 @@ import random
 from window_cap import WindowCapture
 import os
     
+##### SUCCESS!!!!!!!
+# NOTE: 0.8 = get_coins, GET_HP WILL NEED ITS OWN SET OF NUMBERS TO COMPARE, ALSO NUMBERS FOR
+# METRICS MAY BE DIFFERENT AND MAY NEED EXTRA SET 
     
 # Read the input image 
-im = cv2.imread("score_test.jpg")
+im = cv2.imread("images/numbers/test6.jpg")
 
-edges = cv2.Canny(im,100,50)
-cv2.imshow('edges', edges)
-cv2.waitKey()
-cv2.imwrite('edges.jpg', edges)
-
+rect_pos = {7:[]}
 # Convert to grayscale and apply Gaussian filtering; was COLOR_BGR2GRAY
-im_gray = cv2.cvtColor(im, cv2.COLOR_BGR2HSV)
+im_gray = cv2.cvtColor(im, cv2.COLOR_BGR2GRAY)
+template = cv2.imread('images/numbers/3.jpg', 0)
+w, h = template.shape[::-1]
+res = cv2.matchTemplate(im_gray, template, cv2.TM_CCOEFF_NORMED)
+threshold = 0.8
+loc = np.where(res >= threshold)
+
+for pt in zip(*loc[::-1]):
+    rect_pos[7].append(pt[0])
+    cv2.rectangle(im, pt, (pt[0]+w, pt[1]+h), (0,255,255), 2)
+
+print(rect_pos)
+cv2.imshow('detected', im)
+cv2.waitKey()
+
 # im_gray = cv2.GaussianBlur(im_gray, (5, 5), 0)
 
-lower_yellow = np.array([0, 70, 0])
-upper_yellow = np.array([255, 255, 255])
+# lower_yellow = np.array([0, 70, 0])
+# upper_yellow = np.array([255, 255, 255])
 
-mask = cv2.inRange(im_gray, lower_yellow, upper_yellow)
-res = cv2.bitwise_and(im, im, mask = mask)
+# mask = cv2.inRange(im_gray, lower_yellow, upper_yellow)
+# res = cv2.bitwise_and(im, im, mask = mask)
 
 # cv2.imshow('im', im)
 # cv2.imshow('mask', mask)
@@ -46,12 +59,12 @@ res = cv2.bitwise_and(im, im, mask = mask)
 
 print('Yesss!')
 
-ret, im_th = cv2.threshold(mask, 0, 255, cv2.THRESH_BINARY_INV)
+# ret, im_th = cv2.threshold(mask, 0, 255, cv2.THRESH_BINARY_INV)
 
 # cv2.imshow('mask_edit', im_th)
 # cv2.waitKey()
 
-kernel = np.ones((2,2), np.float32)/4
+# kernel = np.ones((2,2), np.float32)/4
 # smoothed = cv2.filter2D(im_th,-1,kernel)
 
 # blur = cv2.GaussianBlur(im_th, (5,5), 0)
@@ -62,15 +75,15 @@ kernel = np.ones((2,2), np.float32)/4
 
 # cv2.imwrite('score_edit.jpg', im_th)
 
-opening = cv2.morphologyEx(im_th, cv2.MORPH_CLOSE, kernel)
+# opening = cv2.morphologyEx(im_th, cv2.MORPH_CLOSE, kernel)
 
 # cv2.imshow('blur', blur)
 # cv2.imshow('median', median)
 # cv2.imshow('median_dilation', median_dilation)
-cv2.imshow('opening', opening)
+# cv2.imshow('opening', opening)
 # cv2.imshow('im_th', im_th)
 
-cv2.waitKey()
+# cv2.waitKey()
 
 # new_image = cv2.imread("score_edit.jpg")
 # ret, new_image = cv2.threshold(new_image, 0, 255, cv2.THRESH_BINARY)

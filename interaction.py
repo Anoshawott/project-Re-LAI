@@ -99,6 +99,29 @@ def screenshot(x, y, width, height
 
 
 
+#### Digit Recognition 2.0
+def get_coins():
+    # loop through each number to see if there is a match, a match is appended to a
+    # dictionary with its key as the number and the its value as the position of the pt.
+    # Then sort the dictionary in increasing order and retrieve the keys to get number
+    # With numbers that have the same numbers just have an underscore proceeding the
+    # the actual number and then just a placeholder after it to indicate that another
+    # number of the same one exists.
+
+    # YOUUU got THISSS!
+    screenshot()
+
+
+    return
+
+
+
+
+
+
+
+
+
 
 
 # Reading real-time onscreen data
@@ -134,12 +157,12 @@ def realtime_capture(wincap):
 
 # Digit recognition for reading numbers off the GUI
 
-mnist = tf.keras.datasets.mnist
+# mnist = tf.keras.datasets.mnist
 
-(x_train, y_train), (x_test, y_test) = mnist.load_data()
+# (x_train, y_train), (x_test, y_test) = mnist.load_data()
 
-x_train = tf.keras.utils.normalize(x_train, axis=1)
-x_test = tf.keras.utils.normalize(x_test, axis=1)
+# x_train = tf.keras.utils.normalize(x_train, axis=1)
+# x_test = tf.keras.utils.normalize(x_test, axis=1)
 
 # model = tf.keras.models.Sequential()
 # model.add(tf.keras.layers.Flatten())
@@ -170,52 +193,52 @@ x_test = tf.keras.utils.normalize(x_test, axis=1)
 # model.save('models/digit_recognition')
 
 # Having completed model successfully load model here
-new_model = tf.keras.models.load_model('models/digit_recognition')
-loss, acc = new_model.evaluate(x_test, y_test)
-print("Restored model, accuracy: {:5.2f}%".format(100*acc))
+# new_model = tf.keras.models.load_model('models/digit_recognition')
+# loss, acc = new_model.evaluate(x_test, y_test)
+# print("Restored model, accuracy: {:5.2f}%".format(100*acc))
 
 
-print('digit model passed')
+# print('digit model passed')
 
 
-def digit_detection():
-    # Load the classifier
-    # clf = joblib.load("digits_cls.pkl")
+# def digit_detection():
+#     # Load the classifier
+#     # clf = joblib.load("digits_cls.pkl")
 
-    # Read the input image 
-    im = cv2.imread("score_test.jpg")
+#     # Read the input image 
+#     im = cv2.imread("score_test.jpg")
 
-    # Convert to grayscale and apply Gaussian filtering; was COLOR_BGR2GRAY
-    im_gray = cv2.cvtColor(im, cv2.COLOR_BGR2HSV)
-    # im_gray = cv2.GaussianBlur(im_gray, (5, 5), 0)
+#     # Convert to grayscale and apply Gaussian filtering; was COLOR_BGR2GRAY
+#     im_gray = cv2.cvtColor(im, cv2.COLOR_BGR2HSV)
+#     # im_gray = cv2.GaussianBlur(im_gray, (5, 5), 0)
 
-    lower_yellow = np.array([0, 70, 0])
-    upper_yellow = np.array([255, 255, 255])
+#     lower_yellow = np.array([0, 70, 0])
+#     upper_yellow = np.array([255, 255, 255])
 
-    mask = cv2.inRange(im_gray, lower_yellow, upper_yellow)
-    res = cv2.bitwise_and(im, im, mask = mask)
+#     mask = cv2.inRange(im_gray, lower_yellow, upper_yellow)
+#     res = cv2.bitwise_and(im, im, mask = mask)
 
-    cv2.imshow('im', im)
-    cv2.imshow('mask', mask)
-    cv2.imshow('res', res)
+#     cv2.imshow('im', im)
+#     cv2.imshow('mask', mask)
+#     cv2.imshow('res', res)
 
-    cv2.waitKey()
+#     cv2.waitKey()
 
-    # Getting HSV range
-    # upper_y = np.uint8([[[74,141,134]]])
-    # hsv_upper_y = cv2.cvtColor(upper_y,cv2.COLOR_BGR2HSV)
-    # print( hsv_upper_y )
+#     # Getting HSV range
+#     # upper_y = np.uint8([[[74,141,134]]])
+#     # hsv_upper_y = cv2.cvtColor(upper_y,cv2.COLOR_BGR2HSV)
+#     # print( hsv_upper_y )
 
-    print('Yesss!')
+#     print('Yesss!')
 
-    # Inversing the filter
-    ret, im_th = cv2.threshold(res, 0, 255, cv2.THRESH_BINARY_INV)
+#     # Inversing the filter
+#     ret, im_th = cv2.threshold(res, 0, 255, cv2.THRESH_BINARY_INV)
     
-    # Find contours in the image
-    ctrs, hier = cv2.findContours(im_th.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+#     # Find contours in the image
+#     ctrs, hier = cv2.findContours(im_th.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
-    # Get rectangles contains each contour
-    rects = [cv2.boundingRect(ctr) for ctr in ctrs]
+#     # Get rectangles contains each contour
+#     rects = [cv2.boundingRect(ctr) for ctr in ctrs]
 
     # #create an empty image for contours
     # img_contours = np.zeros(im.shape)
@@ -258,7 +281,7 @@ def digit_detection():
     # cv2.imshow("Resulting Image with Rectangular ROIs", im)
     # cv2.waitKey()
 
-digit_detection()
+# digit_detection()
 
 
 
@@ -271,45 +294,45 @@ digit_detection()
 
 
 # BELOW IS AN ATTEMPT TO READ FROM TEXT OF GUI
-def get_coins(threshold = 190, var = 10):
+# def get_coins(threshold = 190, var = 10):
 
-    # got_it = False
+#     # got_it = False
     
-    # while not got_it:
+#     # while not got_it:
         
-        # if is_dead():
-        #     return -1
+#         # if is_dead():
+#         #     return -1
 
-    img = screenshot(1122, 868, 50, 20, reduction_factor = 1
-               , gray = False)
+#     img = screenshot(1122, 868, 50, 20, reduction_factor = 1
+#                , gray = False)
 
-    # cv2.imshow('img', img)
-    # cv2.waitKey()
+#     # cv2.imshow('img', img)
+#     # cv2.waitKey()
 
-    # kernel = np.ones((2,2), np.uint8)
-    # img = cv2.dilate(img, kernel, iterations=1)
+#     # kernel = np.ones((2,2), np.uint8)
+#     # img = cv2.dilate(img, kernel, iterations=1)
 
 
-    # for rows in range(0, len(img)):
-    #     for cols in range(0, len(img[0])):
-    #         x = img[rows][cols]
-    #         if x[0] > threshold and x[1] > threshold and x[2] > threshold and max(x) - min(x) < var:
-    #             img[rows][cols] = [0, 0, 0]
-    #         else:
-    #             img[rows][cols] = [255,255,255]
+#     # for rows in range(0, len(img)):
+#     #     for cols in range(0, len(img[0])):
+#     #         x = img[rows][cols]
+#     #         if x[0] > threshold and x[1] > threshold and x[2] > threshold and max(x) - min(x) < var:
+#     #             img[rows][cols] = [0, 0, 0]
+#     #         else:
+#     #             img[rows][cols] = [255,255,255]
 
-    # cv2.imshow('img', img)
-    # cv2.waitKey()
-    custom_config = r'-c tessedit_char_whitelist=0123456789 --psm 6'
-    pytesseract.pytesseract.tesseract_cmd = r'C:\Users\anosh\AppData\Local\Tesseract-OCR\tesseract.exe'
-    score = pytesseract.image_to_string(img, config=custom_config)
-    print(score)
+#     # cv2.imshow('img', img)
+#     # cv2.waitKey()
+#     custom_config = r'-c tessedit_char_whitelist=0123456789 --psm 6'
+#     pytesseract.pytesseract.tesseract_cmd = r'C:\Users\anosh\AppData\Local\Tesseract-OCR\tesseract.exe'
+#     score = pytesseract.image_to_string(img, config=custom_config)
+#     print(score)
 
-    score = re.sub("[^0-9]", "", score)
+#     score = re.sub("[^0-9]", "", score)
 
-    if score != "":            
-        score = int(score)
-        return score
+#     if score != "":            
+#         score = int(score)
+#         return score
 
 # NOTE(NOT STABLE IMAGE KEEPS MOVING; NOT FIXED) BELOW IS AN ATTEMPT TO READ FROM THE NUMBER OF GREEN PIXELS IN THE HP BAR
 # def get_hp():
