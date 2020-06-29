@@ -1,1 +1,7 @@
 - Have python automatically resize screen when starting up
+- Attack reward based on number of coin recieved? --> any increase
+of coins greater than 10 gives a reward of 25 (ATTACK_REWARD)
+- Also have LEVEL_REWARD based on text being detected just above
+the attack selection
+- Read image data as a means of knowning when and how to attack minions
+- how to read hp to know for enemy penalty?

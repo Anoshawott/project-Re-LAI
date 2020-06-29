@@ -8,4 +8,4 @@ class DQNAgent:
         model.add(Conv2D(256, (3,3), input_shape=env.OBSERVATION_SPACE_VALUES))
         model.add(Activation("relu"))
         model.add(MaxPooling2D(2, 2))
-        model.add(Dropout(0.2))
+        model.add(Dropout(0.2) )
