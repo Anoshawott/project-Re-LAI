@@ -13,7 +13,10 @@ import re
 import math
 import time
 import random
+
 from window_cap import WindowCapture
+from digit_detection import DigitDetect
+
 import os
 
 import joblib
@@ -70,26 +73,7 @@ mouse = Controller()
 
 # Following attempts to read and interpret on-screen information
 
-# screenshot() returns an image of some given area
-def screenshot(x, y, width, height
-               , reduction_factor = 1
-               , gray = True
-              ):
-    
-    with mss.mss() as sct:
-        # The screen part to capture
-        region = {'left': x, 'top': y, 'width': width, 'height': height}
-
-        # Grab the data
-        img = sct.grab(region)
-
-        if gray:
-            result = cv2.cvtColor(np.array(img), cv2.COLOR_BGRA2GRAY)
-        else:
-            result = cv2.cvtColor(np.array(img), cv2.COLOR_BGRA2BGR)
-
-        img = result[::reduction_factor, ::reduction_factor]
-        return img  
+print(DigitDetect.get_coins())
 
 # img = screenshot(975, 718, 50, 20)
 # cv2.imshow('img', img)
@@ -100,7 +84,6 @@ def screenshot(x, y, width, height
 
 
 #### Digit Recognition 2.0
-def get_coins():
     # loop through each number to see if there is a match, a match is appended to a
     # dictionary with its key as the number and the its value as the position of the pt.
     # Then sort the dictionary in increasing order and retrieve the keys to get number
@@ -109,10 +92,7 @@ def get_coins():
     # number of the same one exists.
 
     # YOUUU got THISSS!
-    screenshot()
 
-
-    return
 
 
 
