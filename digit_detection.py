@@ -62,11 +62,11 @@ class DigitDetect:
                 count += 1
         return tmp_numbers
 
-    def get_coins(self):
-        img = self.screenshot(x = 1117, y = 868, width = 51, height = 17, gray = False)
+    def get_data(self, x_coor, y_coor, w, h, where):
+        img = self.screenshot(x = x_coor, y = y_coor, width = w, height = h, gray = False)
         numbers = {}
         for number in range(10):
-            returned_numbers = self.detect(img = img, copy = number, region = 'coins')
+            returned_numbers = self.detect(img = img, copy = number, region = where)
             z = numbers.copy()
             z.update(returned_numbers)
             numbers = z

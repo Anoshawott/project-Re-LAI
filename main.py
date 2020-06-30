@@ -77,9 +77,11 @@ for i in list(range(6))[::-1]:
     print(i+1)
     time.sleep(1)
 
-for i in list(range(6))[::-1]:
-    print('Time left:', i+1)
-    print(DigitDetect().get_coins())
+start = time.time()
+while True:
+    print('Time elapsed:', time.time()-start)
+    print('Coins: ', DigitDetect().get_data(1117,868,51,17, where = 'coins'))
+    print('CP: ', DigitDetect().get_data(1504,173,25,16, where = 'cp'))
     print('-------------')
     time.sleep(1)
 
