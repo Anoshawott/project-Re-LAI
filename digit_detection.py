@@ -9,9 +9,10 @@ import mss.tools
 
 class DigitDetect:
 
+
+
     # screenshot() returns an image of some given area
-    @staticmethod
-    def screenshot(x, y, width, height
+    def screenshot(self, x, y, width, height
                 , reduction_factor = 1
                 , gray = True
                 ):
@@ -32,12 +33,11 @@ class DigitDetect:
             return img  
 
     # returns digit and position
-    @staticmethod
-    def detect(img, copy, region):
+    def detect(self, img, copy, region):
         tmp_numbers = {}
         
         # Read the input image 
-        im = cv2.imread(img)
+        im = img
 
         # Convert to grayscale and apply Gaussian filtering; was COLOR_BGR2GRAY
         im_gray = cv2.cvtColor(im, cv2.COLOR_BGR2GRAY)
@@ -50,29 +50,32 @@ class DigitDetect:
         count = 0
         for pt in zip(*loc[::-1]):
             if count == 1:
-                tmp_numbers[str(copy)+'_1'] = pt
+                tmp_numbers[str(copy)+'_!'] = pt[0]
                 count += 1
             elif count == 2:
-                tmp_numbers[str(copy)+'_2'] = pt
+                tmp_numbers[str(copy)+'_@'] = pt[0]
                 count += 1
             elif count == 3:
-                tmp_numbers[str(copy)+'_3'] = pt
+                tmp_numbers[str(copy)+'_#'] = pt[0]
             else:
-                tmp_numbers[str(copy)] = pt
+                tmp_numbers[str(copy)] = pt[0]
                 count += 1
-
-        print('Yesss!')
         return tmp_numbers
 
-    @staticmethod
-    def get_coins():
-        img = screenshot(975, 718, 50, 20, gray = False)
+    def get_coins(self):
+        img = self.screenshot(x = 1117, y = 868, width = 51, height = 17, gray = False)
         numbers = {}
         for number in range(10):
-            returned_numbers = detect(img, number, region = 'coins')
+            returned_numbers = self.detect(img = img, copy = number, region = 'coins')
             z = numbers.copy()
             z.update(returned_numbers)
             numbers = z
         num_coins = {k: v for k, v in sorted(numbers.items(), key=lambda item: item[1])}
-        return num_coins
+        num_coins_str = ''
+        for key in num_coins:
+            num_coins_str = num_coins_str + key
+        remove = ['_', '!', '@', "#"]
+        for i in remove:
+            num_coins_str = num_coins_str.replace(i, '')
+        return int(num_coins_str)
 

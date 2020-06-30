@@ -19,11 +19,11 @@ from digit_detection import DigitDetect
 
 import os
 
-import joblib
-import tensorflow as tf
-from sklearn import datasets
-from skimage.feature import hog
-from sklearn.svm import LinearSVC
+# import joblib
+# import tensorflow as tf
+# from sklearn import datasets
+# from skimage.feature import hog
+# from sklearn.svm import LinearSVC
 
 # # importing os module  
 # import os 
@@ -73,7 +73,15 @@ mouse = Controller()
 
 # Following attempts to read and interpret on-screen information
 
-print(DigitDetect.get_coins())
+for i in list(range(6))[::-1]:
+    print(i+1)
+    time.sleep(1)
+
+for i in list(range(6))[::-1]:
+    print('Time left:', i+1)
+    print(DigitDetect().get_coins())
+    print('-------------')
+    time.sleep(1)
 
 # img = screenshot(975, 718, 50, 20)
 # cv2.imshow('img', img)
