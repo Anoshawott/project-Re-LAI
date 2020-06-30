@@ -77,13 +77,30 @@ for i in list(range(6))[::-1]:
     print(i+1)
     time.sleep(1)
 
-start = time.time()
-while True:
-    print('Time elapsed:', time.time()-start)
-    print('Coins: ', DigitDetect().get_data(1117,868,51,17, where = 'coins'))
-    print('CP: ', DigitDetect().get_data(1504,173,25,16, where = 'cp'))
-    print('-------------')
-    time.sleep(1)
+# start = time.time()
+# count = 0
+# while count == 0:
+#     if count == 0:
+        
+#         DigitDetect().get_data(1117,868,51,17, where = 'coins')
+#         DigitDetect().get_data(1504,173,25,16, where = 'cp')
+#         DigitDetect().get_data(1427,172,43,13, where = 'kda')
+
+#         last_coins = DigitDetect().get_data(1117,868,51,17, where = 'coins')
+#         last_cp = DigitDetect().get_data(1504,173,25,16, where = 'cp')
+#         last_kda = DigitDetect().get_data(1427,172,43,13, where = 'kda')
+#         count += 1
+#         print('Time elapsed:', time.time()-start)
+#     else:
+#         print('Time elapsed:', time.time()-start)
+#         print('Coins: ', DigitDetect().get_data(1117,868,51,17, where = 'coins', last = last_coins))
+#         print('CP: ', DigitDetect().get_data(1504,173,25,16, where = 'cp', last = last_cp))
+#         print('KDA: ', DigitDetect().get_data(1427,172,43,13, where = 'kda', last = last_kda))
+#         print('-------------')
+#         last_coins = DigitDetect().get_data(1117,868,51,17, where = 'coins')
+#         last_cp = DigitDetect().get_data(1504,173,25,16, where = 'cp')
+#         last_kda = DigitDetect().get_data(1427,172,43,13, where = 'kda')
+
 
 # img = screenshot(975, 718, 50, 20)
 # cv2.imshow('img', img)
@@ -117,7 +134,7 @@ while True:
 # Reading real-time onscreen data
 
 def realtime_capture(wincap):
-    loop_time = time()
+    loop_time = time.time()
     while(True):
         
         screenshot = wincap.get_screenshot()
@@ -125,8 +142,8 @@ def realtime_capture(wincap):
         cv2.imshow('Computer Vision', screenshot)
 
         # debugging the loop rate
-        print('FPS {}'.format(1/(time()-loop_time)))
-        loop_time = time()
+        print('FPS {}'.format(1/(time.time()-loop_time)))
+        loop_time = time.time()
 
         if cv2.waitKey(1) == ord('q'):
             cv2.destroyAllWindows()
