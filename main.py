@@ -2,14 +2,8 @@
 
 import numpy as np
 from DirectKeys import PressKey, ReleaseKey, Y, ESC
-import pyautogui
-from PIL import Image
 from pynput.mouse import Button, Controller
-import mss
-import mss.tools
 import cv2
-import pytesseract
-import re
 import math
 import time
 import random

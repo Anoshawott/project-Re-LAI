@@ -1,0 +1,56 @@
+topleft = 1504, 173
+topright = 1529, 171
+bottomright = 1529, 187
+
+- create if statement that returns last recorded value
+if the number is not recognised
+
+- NOTE: coins crashed at 2549 that is couldn't recognise
+2551 for some reason...
+
+topleft = 1427, 172
+topright = 1440, 172
+bottomright = 1440, 185
+
+isolate problem with kda cannot detect numbers 
+correctly --> NEED TO FIX!!
+
+COINS:
+x = 838
+y = 715
+w = 43
+h = 
+
+CP:
+x = 1195
+y = 14
+w = 14
+h =15
+
+KDA:
+x = 1140
+y = 14
+w = 33
+h = 16
+
+LEVEL:
+x = 427
+y = 709
+w = 24
+h = 23
+
+HP:
+x = 588
+y = 696
+w = 25
+h = 14
+
+DISTANCE (mini-map):
+x = 1276
+y = 713
+w = 187
+h = 186
+
+TIME: (needs reward/punshiment no image recog. needed)
+
+- Plan which metrics to keep so to optimize ai
