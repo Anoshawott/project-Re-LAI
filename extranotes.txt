@@ -21,7 +21,7 @@ y = 715
 w = 43
 h = 
 
-CP:
+CS:
 x = 1195
 y = 14
 w = 14
@@ -51,6 +51,12 @@ y = 713
 w = 187
 h = 186
 
-TIME: (needs reward/punshiment no image recog. needed)
+TIME: (needs reward/punshiment no image recog. needed)?
 
-- Plan which metrics to keep so to optimize ai
+- Plan which metrics to keep so to optimize ai -- FIXED!
+
+- Plan how to determine distance between objects on map
+so to optimize on player position to final end point!
+	- Optimize coin check --> only need to check every
+	40 seconds or so?
+	- 

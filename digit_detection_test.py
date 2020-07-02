@@ -22,6 +22,8 @@ class DigitDetect:
         tmp_numbers = {}
         # Read and crop the input image 
         crop_img = img[y:y+height, x:x+width]
+        if region == 'hp':
+            cv2.imwrite('hp_test.jpg', crop_img)
 
         # Convert to grayscale and apply Gaussian filtering; was COLOR_BGR2GRAY
         im_gray = cv2.cvtColor(crop_img, cv2.COLOR_BGR2GRAY)
@@ -30,7 +32,11 @@ class DigitDetect:
         
         res = cv2.matchTemplate(im_gray, template, cv2.TM_CCOEFF_NORMED)
         
-        threshold = 0.8
+        if region == 'hp':
+            threshold = 0.9
+        else:
+            threshold = 0.8
+        
         loc = np.where(res >= threshold)
 
         count = 0
@@ -48,18 +54,22 @@ class DigitDetect:
                 count += 1
         return tmp_numbers
 
+    # 'mini_map_positions':[1087,527,181,181] 'coins': [797,691,51,17],
     def get_data(self, last = ''):
         img = self.screenshot()
-        input_data = {'coins': [797,691,51,17], 'cs':[1178,0,25,16], 
-                'kda':[1103,0,43,13]}
+        input_data = {'cs':[1178,0,25,16], 
+                'kda':[1103,0,43,13], 'level':[402,684,25,25], 
+                'hp':[550,680,36,16]}
         output_data = {}
         for area in input_data:
+            # print(area,'----------')
             x_coor = input_data[area][0]
             y_coor = input_data[area][1]
             w = input_data[area][2]
             h = input_data[area][3]
             numbers = {}
             for number in range(10):
+                # print(number)
                 returned_numbers = self.detect(img = img, copy = number, region = area,
                                             x = x_coor, y = y_coor, width = w, height = h)
                 z = numbers.copy()
