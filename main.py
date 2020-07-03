@@ -9,7 +9,7 @@ import time
 import random
 
 from window_cap import WindowCapture
-from digit_detection import DigitDetect
+from detection import Detection
 
 import os
 

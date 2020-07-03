@@ -55,8 +55,38 @@ TIME: (needs reward/punshiment no image recog. needed)?
 
 - Plan which metrics to keep so to optimize ai -- FIXED!
 
+
+
+
 - Plan how to determine distance between objects on map
 so to optimize on player position to final end point!
+	- Have better integration for player detect in 
+	detect function so more efficient and less clunky
+	code. --> have "last parameter" to return last 
+	seen x and y coordinates of player
+	- idea for turret detection --> have them only 
+	detected at the given pixel coordinates 
+	of each turret on the lane being faced against and 
+	identify state from the image of how it looks 
+	--> once closer to the turret based on player
+	relative to the turret TURRET DETECTION SWITCHES
+	OFF TO GIVE TURRET HP DATA AT TOP LEFT.
+	- PROBLEM!!!!!! --> HOW TO ASSESS CHAMPION HP -->
+	ESPECIALLY IMPORTANT TO REWARD THE AI FOR 
+	ATTACKING CHAMPIONS --> POSSIBLE SOLUTION: detect
+	position of the enemy level sign above the player
+	and then do some simple pixel plus or minus pixel
+	calculations to locate position of hp bar and then
+	count the number of green pixels as an indicator
+	of total hp available (don't forget but will need
+	to decide how to determine current hp if the total
+	bar is covered --> DETECT THE ENTIRE STATUS BAR 
+	NOT JUST FROM THE LEVEL BOX, ensures the whole bar
+	can be seen).
+
+	- Once the above has been determined may start
+	model construction... (HOPEFULLY by MONDAY?)
+
 	- Optimize coin check --> only need to check every
 	40 seconds or so?
 	- 

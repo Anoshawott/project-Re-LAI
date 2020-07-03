@@ -7,9 +7,7 @@ import time
 # NOTE: 0.8 = get_coins, GET_HP WILL NEED ITS OWN SET OF NUMBERS TO COMPARE, ALSO NUMBERS FOR
 # METRICS MAY BE DIFFERENT AND MAY NEED EXTRA SET 
 
-class DigitDetect:
-
-
+class Detection:
 
     # screenshot() returns an image of some given area
     def screenshot(self):
@@ -18,18 +16,18 @@ class DigitDetect:
         return img  
 
     # returns digit and position
-    def detect(self, img, copy, region, x, y, width, height):
+    def digit_detect(self, img, copy=None, region=None, x=0, y=0, width=1270, height=711):
         tmp_numbers = {}
         # Read and crop the input image 
         crop_img = img[y:y+height, x:x+width]
-        if region == 'hp':
-            cv2.imwrite('hp_test.jpg', crop_img)
+        # if region == 'hp':
+        #     cv2.imwrite('hp_test.jpg', crop_img)
 
         # Convert to grayscale and apply Gaussian filtering; was COLOR_BGR2GRAY
         im_gray = cv2.cvtColor(crop_img, cv2.COLOR_BGR2GRAY)
         template = cv2.imread('images/numbers/'+ region +'/' + str(copy) + '.jpg', 0)
+
         w, h = template.shape[::-1]
-        
         res = cv2.matchTemplate(im_gray, template, cv2.TM_CCOEFF_NORMED)
         
         if region == 'hp':
@@ -54,13 +52,63 @@ class DigitDetect:
                 count += 1
         return tmp_numbers
 
+
+    # returns player position from mini-map
+    def player_detect(self, img, copy=None, region=None, x=0, y=0, width=1270, height=711):
+        tmp_numbers = {}
+        # Read and crop the input image 
+        crop_img = img[y:y+height, x:x+width]
+
+        # Convert to grayscale and apply Gaussian filtering; was COLOR_BGR2GRAY
+        im_gray = cv2.cvtColor(crop_img, cv2.COLOR_BGR2GRAY)
+        template = cv2.imread('images/players/player_control.jpg', 0)
+
+        w, h = template.shape[::-1]
+        res = cv2.matchTemplate(im_gray, template, cv2.TM_CCOEFF_NORMED)
+        
+        threshold = 0.45
+        
+        loc = np.where(res >= threshold)
+
+        for pt in zip(*loc[::-1]):
+            cv2.rectangle(crop_img, pt, (pt[0]+w, pt[1]+h), (0,255,255), 2)
+            x_pos = pt[0]/2
+            y_pos = pt[1]/2
+        return x_pos, y_pos, crop_img
+    
+    # returns turret state from mini-map
+    def turret_detect(self, img, copy=None, region=None, x=0, y=0, width=1270, height=711):
+        tmp_numbers = {}
+        # Read and crop the input image 
+        crop_img = img[y:y+height, x:x+width]
+
+        # Convert to grayscale and apply Gaussian filtering; was COLOR_BGR2GRAY
+        im_gray = cv2.cvtColor(crop_img, cv2.COLOR_BGR2GRAY)
+        template = cv2.imread('images/players/player_control.jpg', 0)
+
+        w, h = template.shape[::-1]
+        res = cv2.matchTemplate(im_gray, template, cv2.TM_CCOEFF_NORMED)
+        
+        threshold = 0.45
+        
+        loc = np.where(res >= threshold)
+
+        for pt in zip(*loc[::-1]):
+            cv2.rectangle(crop_img, pt, (pt[0]+w, pt[1]+h), (0,255,255), 2)
+            x_pos = pt[0]/2
+            y_pos = pt[1]/2
+        return x_pos, y_pos, crop_img
+
+
     # 'mini_map_positions':[1087,527,181,181] 'coins': [797,691,51,17],
-    def get_data(self, last = ''):
+    def get_data(self, last_digits = '', last_play_pos = ''):
         img = self.screenshot()
         input_data = {'cs':[1178,0,25,16], 
                 'kda':[1103,0,43,13], 'level':[402,684,25,25], 
-                'hp':[550,680,36,16]}
+                'hp':[550,680,36,16], 'map':[1087,527,181,181],
+                'turret1':[]}
         output_data = {}
+        map_data = {}
         for area in input_data:
             # print(area,'----------')
             x_coor = input_data[area][0]
@@ -68,64 +116,67 @@ class DigitDetect:
             w = input_data[area][2]
             h = input_data[area][3]
             numbers = {}
-            for number in range(10):
-                # print(number)
-                returned_numbers = self.detect(img = img, copy = number, region = area,
-                                            x = x_coor, y = y_coor, width = w, height = h)
-                z = numbers.copy()
-                z.update(returned_numbers)
-                numbers = z
-            num = {k: v for k, v in sorted(numbers.items(), key=lambda item: item[1])}
-            num_str = ''
-            for key in num:
-                num_str = num_str + key
-            remove = ['_', '!', '@', "#"]
-            for i in remove:
-                num_str = num_str.replace(i, '')
-            if area == 'kda' and num_str != '':
-                kda = []
-                for i in num_str:
-                    if i == '':
-                        return last
-                    else:
-                        kda.append(i)
-                output_data[area]=kda
-                continue
-            if num_str == '':
-                output_data[area]=last
+            if area != 'map':
+                for number in range(10):
+                    # print(number)
+                    returned_numbers = self.digit_detect(img = img, copy = number, region = area,
+                                                x = x_coor, y = y_coor, width = w, height = h)
+                    z = numbers.copy()
+                    z.update(returned_numbers)
+                    numbers = z
+                num = {k: v for k, v in sorted(numbers.items(), key=lambda item: item[1])}
+                num_str = ''
+                for key in num:
+                    num_str = num_str + key
+                remove = ['_', '!', '@', "#"]
+                for i in remove:
+                    num_str = num_str.replace(i, '')
+                if area == 'kda' and num_str != '':
+                    kda = []
+                    for i in num_str:
+                        if i == '':
+                            return last_digits
+                        else:
+                            kda.append(i)
+                    output_data[area]=kda
+                    continue
+                if num_str == '':
+                    output_data[area]=last_digits
+                else:
+                    output_data[area]=num_str
             else:
-                output_data[area]=num_str
-        
-        return output_data
+                x_pos, y_pos = self.player_detect(img = img, copy = number, region = area,
+                                                x = x_coor, y = y_coor, width = w, height = h)
+        return output_data, map_data
 
 
 # Following attempts to read and interpret on-screen information 
 #### (Digit Recognition 3.0)
 
-for i in list(range(3))[::-1]:
-    print(i+1)
-    time.sleep(1)
+# for i in list(range(3))[::-1]:
+#     print(i+1)
+#     time.sleep(1)
 
-start = time.time()
-count = 0
-while True:
-    if count == 0:
-        print('Time elapsed:', time.time()-start)
-        print(DigitDetect().get_data())
-        print('-------------')
-        last_data = DigitDetect().get_data()
+# start = time.time()
+# count = 0
+# while True:
+#     if count == 0:
+#         print('Time elapsed:', time.time()-start)
+#         print(DigitDetect().get_data())
+#         print('-------------')
+#         last_data = DigitDetect().get_data()
 
-        count += 1
-    else:
-        print('Time elapsed:', time.time()-start)
-        start_1 = time.time()
-        print(DigitDetect().get_data(last = last_data))
-        print(time.time()-start_1)
-        print('-------------')
-        last_data = DigitDetect().get_data()
+#         count += 1
+#     else:
+#         print('Time elapsed:', time.time()-start)
+#         start_1 = time.time()
+#         print(DigitDetect().get_data(last = last_data))
+#         print(time.time()-start_1)
+#         print('-------------')
+#         last_data = DigitDetect().get_data()
 
 
-    time.sleep(5)
+#     time.sleep(5)
 
 
 
