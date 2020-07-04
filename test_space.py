@@ -10,19 +10,17 @@ import time
 # cv2.waitKey()
 
 def realtime_capture(wincap=None):
-    # loop_time = time.time()
+    loop_time = time.time()
     while(True):
         
         # screenshot = wincap.get_screenshot()
         
-        x_pos, y_pos, img = Detection().detect(Detection().screenshot(),
-                                        x = 1087,y = 527, width = 181, height = 181,player=True)
-        print(x_pos, y_pos)
-        cv2.imshow('player identified?', img)
+        print(Detection().get_data(time=loop_time))
+        # cv2.imshow('player identified?', img)
 
         # debugging the loop rate
-        # print('FPS {}'.format(1/(time.time()-loop_time)))
-        # loop_time = time.time()
+        print('FPS {}'.format(1/(time.time()-loop_time)))
+        loop_time = time.time()
 
         if cv2.waitKey(1) == ord('q'):
             cv2.destroyAllWindows()

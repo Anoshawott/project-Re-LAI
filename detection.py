@@ -1,7 +1,10 @@
+#cd C:\Users\anosh\Documents\GitHub\project-lai
+
 import numpy as np
 import cv2
 from window_cap import WindowCapture
 import time
+import math
 
 ##### SUCCESS!!!!!!!
 # NOTE: 0.8 = get_coins, GET_HP WILL NEED ITS OWN SET OF NUMBERS TO COMPARE, ALSO NUMBERS FOR
@@ -54,10 +57,11 @@ class Detection:
 
 
     # returns player position from mini-map
-    def player_detect(self, img, copy=None, region=None, x=0, y=0, width=1270, height=711):
+    def player_detect(self, img, copy=None, region=None, x=0, y=0, width=1270, height=711, last = None):
         tmp_numbers = {}
         # Read and crop the input image 
         crop_img = img[y:y+height, x:x+width]
+        # cv2.imwrite('mini_map.jpg', crop_img)
 
         # Convert to grayscale and apply Gaussian filtering; was COLOR_BGR2GRAY
         im_gray = cv2.cvtColor(crop_img, cv2.COLOR_BGR2GRAY)
@@ -69,46 +73,57 @@ class Detection:
         threshold = 0.45
         
         loc = np.where(res >= threshold)
+        x_pos = last[0]
+        y_pos = last[1]
 
         for pt in zip(*loc[::-1]):
-            cv2.rectangle(crop_img, pt, (pt[0]+w, pt[1]+h), (0,255,255), 2)
-            x_pos = pt[0]/2
-            y_pos = pt[1]/2
-        return x_pos, y_pos, crop_img
+            # cv2.rectangle(crop_img, pt, (pt[0]+w, pt[1]+h), (0,255,255), 2)
+            x_pos = pt[0]+w/2
+            y_pos = pt[1]+h/2
+        return x_pos, y_pos
     
-    # returns turret state from mini-map
-    def turret_detect(self, img, copy=None, region=None, x=0, y=0, width=1270, height=711):
-        tmp_numbers = {}
-        # Read and crop the input image 
-        crop_img = img[y:y+height, x:x+width]
+    # returns turret state and distance from player from mini-map
+    # def turret_detect(self, img, copy=None, region=None, x=0, y=0, width=1270, height=711):
+    #     tmp_numbers = {}
+    #     # Read and crop the input image 
+    #     crop_img = img[y:y+height, x:x+width]
 
-        # Convert to grayscale and apply Gaussian filtering; was COLOR_BGR2GRAY
-        im_gray = cv2.cvtColor(crop_img, cv2.COLOR_BGR2GRAY)
-        template = cv2.imread('images/players/player_control.jpg', 0)
+    #     # Convert to grayscale and apply Gaussian filtering; was COLOR_BGR2GRAY
+    #     im_gray = cv2.cvtColor(crop_img, cv2.COLOR_BGR2GRAY)
+    #     template = cv2.imread('images/players/player_control.jpg', 0)
 
-        w, h = template.shape[::-1]
-        res = cv2.matchTemplate(im_gray, template, cv2.TM_CCOEFF_NORMED)
+    #     w, h = template.shape[::-1]
+    #     res = cv2.matchTemplate(im_gray, template, cv2.TM_CCOEFF_NORMED)
         
-        threshold = 0.45
+    #     threshold = 0.45
         
-        loc = np.where(res >= threshold)
+    #     loc = np.where(res >= threshold)
+    #     x_pos = None
+    #     y_pos = None
 
-        for pt in zip(*loc[::-1]):
-            cv2.rectangle(crop_img, pt, (pt[0]+w, pt[1]+h), (0,255,255), 2)
-            x_pos = pt[0]/2
-            y_pos = pt[1]/2
-        return x_pos, y_pos, crop_img
+    #     for pt in zip(*loc[::-1]):
+    #         # cv2.rectangle(crop_img, pt, (pt[0]+w, pt[1]+h), (0,255,255), 2)
+    #         x_pos = pt[0]/2
+    #         y_pos = pt[1]/2
+    #     return x_pos, y_pos, crop_img
 
 
-    # 'mini_map_positions':[1087,527,181,181] 'coins': [797,691,51,17],
-    def get_data(self, last_digits = '', last_play_pos = ''):
+    # put output_data variable for last_digits when initiating function; turret':[146,20,30,15],
+    def get_data(self, last_digits = None, time = 0):
         img = self.screenshot()
+        cv2.imwrite('turret_display.jpg', img)
         input_data = {'cs':[1178,0,25,16], 
                 'kda':[1103,0,43,13], 'level':[402,684,25,25], 
-                'hp':[550,680,36,16], 'map':[1087,527,181,181],
-                'turret1':[]}
+                'hp':[550,680,36,16], 'coins': [797,691,51,17],
+                 'map':[1087,527,181,181]}
         output_data = {}
         map_data = {}
+        time = math.floor(time)
+
+        # Only reading coin data every 50 seconds
+        if time%50 != 0:
+            del input_data['coins']
+        
         for area in input_data:
             # print(area,'----------')
             x_coor = input_data[area][0]
@@ -116,7 +131,7 @@ class Detection:
             w = input_data[area][2]
             h = input_data[area][3]
             numbers = {}
-            if area != 'map':
+            if area == 'cs' or area=='kda' or area=='level' or area=='hp' or area=='coins' or area=='turret':
                 for number in range(10):
                     # print(number)
                     returned_numbers = self.digit_detect(img = img, copy = number, region = area,
@@ -141,12 +156,30 @@ class Detection:
                     output_data[area]=kda
                     continue
                 if num_str == '':
-                    output_data[area]=last_digits
+                    output_data[area]=last_digits[area]
                 else:
                     output_data[area]=num_str
             else:
+                # fix last thiing later just a minor problem easy when formulating final player positions
+                # in player_interaction.py
+                last = [20,170]
                 x_pos, y_pos = self.player_detect(img = img, copy = number, region = area,
-                                                x = x_coor, y = y_coor, width = w, height = h)
+                                                x = x_coor, y = y_coor, width = w, height = h, last=last)
+                map_data['player']=[x_pos, y_pos, last]
+
+                # closest distance coordinate to turret_outer --> 109,90
+                # Try get this distance and apply this same distance condition for the other turrets 
+
+                #### Just get the other turret coordinates from their centre in photoshop --> then figure out
+                #### how to determine which turret hp information will be updated from an EXISTING DICT
+                # tur_outer = [112,86]
+                # tur_inner = [122,66]
+                # tur_ = []
+
+                # have a HIGHER REWARD for getting closer and attacking higher up turrets 
+                map_data['tur_dist']=[]
+                # Only reading turret position a certain distance away (will determine soon exact x and y coords)
+
         return output_data, map_data
 
 
