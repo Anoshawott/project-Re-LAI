@@ -61,8 +61,11 @@ TIME: (needs reward/punshiment no image recog. needed)?
 - Plan how to determine distance between objects on map
 so to optimize on player position to final end point!
 	
+- 	
+
 	- Maybe can get turret positions from moving 
-	player to turret in tests!!!!
+	player to turret in tests!!!! (OUTDATED REFER
+	TO MOST RECENT NOTES IN CODE!!!)
 
 	- Have better integration for player detect in 
 	detect function so more efficient and less clunky

@@ -23,7 +23,8 @@ class Detection:
         tmp_numbers = {}
         # Read and crop the input image 
         crop_img = img[y:y+height, x:x+width]
-        # if region == 'hp':
+        
+        # if x == 146 and y==20 and width==30 and height==15:
         #     cv2.imwrite('hp_test.jpg', crop_img)
 
         # Convert to grayscale and apply Gaussian filtering; was COLOR_BGR2GRAY
@@ -35,6 +36,8 @@ class Detection:
         
         if region == 'hp':
             threshold = 0.9
+        # elif region == 'hp-tur':
+        #     threshold = 0.77
         else:
             threshold = 0.8
         
@@ -109,9 +112,9 @@ class Detection:
 
 
     # put output_data variable for last_digits when initiating function; turret':[146,20,30,15],
-    def get_data(self, last_digits = None, time = 0):
+    def get_data(self, last_digits = None, last_pos = None, time = 0):
         img = self.screenshot()
-        cv2.imwrite('turret_display.jpg', img)
+        # cv2.imwrite('turret_display.jpg', img)
         input_data = {'cs':[1178,0,25,16], 
                 'kda':[1103,0,43,13], 'level':[402,684,25,25], 
                 'hp':[550,680,36,16], 'coins': [797,691,51,17],
@@ -162,22 +165,61 @@ class Detection:
             else:
                 # fix last thiing later just a minor problem easy when formulating final player positions
                 # in player_interaction.py
-                last = [20,170]
+                
+                if last_pos is None:
+                    last = [20,170]
+                else:
+                    last = last_pos
+
                 x_pos, y_pos = self.player_detect(img = img, copy = number, region = area,
                                                 x = x_coor, y = y_coor, width = w, height = h, last=last)
-                map_data['player']=[x_pos, y_pos, last]
+                map_data['player_pos']=[x_pos, y_pos]
 
-                # closest distance coordinate to turret_outer --> 109,90
+                # closest distance coordinate to turret_outer --> 6 units
                 # Try get this distance and apply this same distance condition for the other turrets 
 
                 #### Just get the other turret coordinates from their centre in photoshop --> then figure out
                 #### how to determine which turret hp information will be updated from an EXISTING DICT
-                # tur_outer = [112,86]
-                # tur_inner = [122,66]
-                # tur_ = []
+
+                turrets = {'tur_outer':[112,86],'tur_inner':[122,66],'tur_inhib':[138,53],
+                            'inhib':[143,46],'tur_nex_1':[155,30],'tur_nex_2':[160,36],'nexus':[162,28]}
+
+                def dist(cur_pos = None, tur_pos = None):
+                    return math.sqrt((tur_pos[1]-cur_pos[1])**2 + (tur_pos[0]-cur_pos[0])**2)
+                
+                map_data['tur_dist']={}
+                map_data['tur_hp']={}
+
+                x_coor = 146
+                y_coor = 20
+                w = 30
+                h = 15
+                
+                for tur in turrets:
+                    rel_dist = dist(map_data['player_pos'],turrets[tur])
+                    map_data['tur_dist'][tur]=math.floor(rel_dist)
+                    if math.floor(rel_dist)<=7:
+                        for number in range(10):
+                            # print(number)
+                            returned_numbers = self.digit_detect(img = img, copy = number, region = 'hp-tur',
+                                                        x = x_coor, y = y_coor, width = w, height = h)
+                            z = numbers.copy()
+                            z.update(returned_numbers)
+                            numbers = z
+                        num = {k: v for k, v in sorted(numbers.items(), key=lambda item: item[1])}
+                        num_str = ''
+                        for key in num:
+                            num_str = num_str + key
+                        remove = ['_', '!', '@', "#"]
+                        for i in remove:
+                            num_str = num_str.replace(i, '')
+                        if num_str == '':
+                            None
+                        else:
+                            map_data['tur_hp'][tur]=num_str
 
                 # have a HIGHER REWARD for getting closer and attacking higher up turrets 
-                map_data['tur_dist']=[]
+                
                 # Only reading turret position a certain distance away (will determine soon exact x and y coords)
 
         return output_data, map_data
