@@ -1,5 +1,5 @@
 from window_cap import WindowCapture
-from detection import Detection
+from RealRecognition import Detection
 import cv2
 import time
 
@@ -15,8 +15,10 @@ def realtime_capture(wincap=None):
         
         # screenshot = wincap.get_screenshot()
         
-        print(Detection().get_data(time=loop_time))
-        # cv2.imshow('player identified?', img)
+        data_out, map_out, final_img = Detection().get_data(time=loop_time)
+        print('Digit_data:', data_out)
+        print('Map_data:', map_out)
+        cv2.imshow('player identified?', final_img)
 
         # debugging the loop rate
         print('FPS {}'.format(1/(time.time()-loop_time)))

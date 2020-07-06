@@ -55,7 +55,10 @@ TIME: (needs reward/punshiment no image recog. needed)?
 
 - Plan which metrics to keep so to optimize ai -- FIXED!
 
-
+- GUI_HUD
+	- x = 9 y = 7
+	- Player side colour = R:10 G:37 B:54
+	- Enemy side colour = R:70 G:10 B:9
 
 
 - Plan how to determine distance between objects on map

@@ -85,6 +85,32 @@ class Detection:
             y_pos = pt[1]+h/2
         return x_pos, y_pos
     
+    # returns enemy position from surroundings
+    def enemy_detect(self, img, copy=None, region=None, x=0, y=0, width=1270, height=711, last = None):
+        tmp_numbers = {}
+        # Read and crop the input image 
+        # crop_img = img[y:y+height, x:x+width]
+        # cv2.imwrite('mini_map.jpg', crop_img)
+
+        # Convert to grayscale and apply Gaussian filtering; was COLOR_BGR2GRAY
+        im_gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+        template = cv2.imread('images/enemy/6.jpg', 0)
+
+        w, h = template.shape[::-1]
+        res = cv2.matchTemplate(im_gray, template, cv2.TM_CCOEFF_NORMED)
+        
+        threshold = 0.8
+        
+        loc = np.where(res >= threshold)
+        # x_pos = last[0]
+        # y_pos = last[1]
+
+        for pt in zip(*loc[::-1]):
+            cv2.rectangle(img, pt, (pt[0]+w, pt[1]+h), (0,255,255), 1)
+            
+            
+        return img
+
     # returns turret state and distance from player from mini-map
     # def turret_detect(self, img, copy=None, region=None, x=0, y=0, width=1270, height=711):
     #     tmp_numbers = {}
@@ -114,6 +140,7 @@ class Detection:
     # put output_data variable for last_digits when initiating function; turret':[146,20,30,15],
     def get_data(self, last_digits = None, last_pos = None, time = 0):
         img = self.screenshot()
+        cv2.imwrite('test.jpg', img)
         # cv2.imwrite('turret_display.jpg', img)
         input_data = {'cs':[1178,0,25,16], 
                 'kda':[1103,0,43,13], 'level':[402,684,25,25], 
@@ -219,10 +246,19 @@ class Detection:
                             map_data['tur_hp'][tur]=num_str
 
                 # have a HIGHER REWARD for getting closer and attacking higher up turrets 
-                
-                # Only reading turret position a certain distance away (will determine soon exact x and y coords)
+                ##### need to do MANA check and reward system for regaining this but not too much that it 
+                ##### does it constantly without pushing forward
+                # Only reading turret position a certain distance away --> only store turret HP if a 
+                # value for turret HP is established
 
-        return output_data, map_data
+            # Enemy detect sequence; read only 1270x560
+            ## HAVE FACIAL RECOGNITION OF PLAYERS ON START SCREEN; SAVE EACH PLAYER FACE FROM LOADING
+            ## SCREEN. IF THERE ARE MORE THAN ONE LEVEL BARS IN THE GIVEN SCREEN AI WILL QUICKLY CLICK 
+            ## ON THE OTHER PLAYER THAT HAS ENTERED THE SCREEN IDENTIFY FROM THE TOP LEFT SPACE THE FACE
+            ## USING TEMPLATE MATCHING WILL UNDERSTAND IF THE PLAYER IS AN ENEMY OR ALLY!!!!!
+            img_enemy = self.enemy_detect(img=img)
+
+        return output_data, map_data, img_enemy
 
 
 # Following attempts to read and interpret on-screen information 
