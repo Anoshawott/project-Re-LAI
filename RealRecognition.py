@@ -105,11 +105,17 @@ class Detection:
         # x_pos = last[0]
         # y_pos = last[1]
 
+        count = 0
         for pt in zip(*loc[::-1]):
             cv2.rectangle(img, pt, (pt[0]+w, pt[1]+h), (0,255,255), 1)
+            count+=1
+        
+        if count > 1:
+            return 1
+        else:
+            return 0
             
-            
-        return img
+        
 
     # returns turret state and distance from player from mini-map
     # def turret_detect(self, img, copy=None, region=None, x=0, y=0, width=1270, height=711):
@@ -256,9 +262,24 @@ class Detection:
             ## SCREEN. IF THERE ARE MORE THAN ONE LEVEL BARS IN THE GIVEN SCREEN AI WILL QUICKLY CLICK 
             ## ON THE OTHER PLAYER THAT HAS ENTERED THE SCREEN IDENTIFY FROM THE TOP LEFT SPACE THE FACE
             ## USING TEMPLATE MATCHING WILL UNDERSTAND IF THE PLAYER IS AN ENEMY OR ALLY!!!!!
-            img_enemy = self.enemy_detect(img=img)
 
-        return output_data, map_data, img_enemy
+            ### OR try to analyse dataset from online --> look into...
+
+            ### FINAL DECISION: Try read enemy hud in top left use hsv range colour check
+            ### to see if red if in the red range then return as enemy within range...
+            # (WILL COME BACK TO LATER SINCE TAKING WAY TOO MUCH TIME RIGHT NOW!!)
+
+            
+
+            ### SIDE NOTE: might need to consider distance to other turrets; strategy may change throughout 
+            # the game where champion should go based on other players...
+
+            # FOR NOW --> 
+            # Just to know that there are potential enemies around ; take caution...
+            enemy_presence = self.enemy_detect(img=img)
+
+        return {'output_data':output_data, 'map_data':map_data,
+                'enemy_presence': enemy_presence}
 
 
 # Following attempts to read and interpret on-screen information 
