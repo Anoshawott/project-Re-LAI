@@ -9,14 +9,17 @@ from DirectKeys import PressKey, ReleaseKey, Y, Q, W, E, R, D, F, B, ESC, CTRL, 
 class PlayerAI:
     def __init__(self):
         self.data = Detection().get_data()
-        self.playerai_stats = self.data['output_data']
-        self.map_stats = self.data['map_data']
-        self.pot_enemey = self.data['enemy_presence']
+        # self.playerai_stats = self.data['output_data']
+        # self.map_stats = self.data['map_data']
+        # self.pot_enemey = self.data['enemy_presence']
         self.x_map, self.y_map = self.map_stats['player_pos']
         self.win_prop = WindowCapture('League of Legends (TM) Client').get_screen_position()
         self.choices = pickle.load(open('choices.pickle', 'rb'))
         # self.x, self.y = '' --> maybe something to think about later...
     
+    def new_data(self):
+        return Detection().get_data()
+
     def action(self, choice):
         # each choice should be associated with a chosen position of the 
         # mouse position choices will range from 5 radii each and have 36 different

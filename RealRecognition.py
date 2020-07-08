@@ -6,6 +6,9 @@ from window_cap import WindowCapture
 import time
 import math
 
+# Maybe consider gpu accelerated python compiling...
+# from numba import jit, cuda
+
 ##### SUCCESS!!!!!!!
 # NOTE: 0.8 = get_coins, GET_HP WILL NEED ITS OWN SET OF NUMBERS TO COMPARE, ALSO NUMBERS FOR
 # METRICS MAY BE DIFFERENT AND MAY NEED EXTRA SET 
@@ -19,7 +22,8 @@ class Detection:
         return img  
 
     # returns digit and position
-    def digit_detect(self, img, copy=None, region=None, x=0, y=0, width=1270, height=711):
+    # @jit(target='cuda')
+    def digit_detect(self, img=None, copy=None, region=None, x=0, y=0, width=1270, height=711):
         tmp_numbers = {}
         # Read and crop the input image 
         crop_img = img[y:y+height, x:x+width]
@@ -60,7 +64,8 @@ class Detection:
 
 
     # returns player position from mini-map
-    def player_detect(self, img, copy=None, region=None, x=0, y=0, width=1270, height=711, last = None):
+    # @jit(target='cuda')
+    def player_detect(self, img=None, copy=None, region=None, x=0, y=0, width=1270, height=711, last = None):
         tmp_numbers = {}
         # Read and crop the input image 
         crop_img = img[y:y+height, x:x+width]
@@ -86,7 +91,8 @@ class Detection:
         return x_pos, y_pos
     
     # returns enemy position from surroundings
-    def enemy_detect(self, img, copy=None, region=None, x=0, y=0, width=1270, height=711, last = None):
+    # @jit(target='cuda')
+    def enemy_detect(self, img=None, copy=None, region=None, x=0, y=0, width=1270, height=711, last = None):
         tmp_numbers = {}
         # Read and crop the input image 
         # crop_img = img[y:y+height, x:x+width]
@@ -150,14 +156,14 @@ class Detection:
         # cv2.imwrite('turret_display.jpg', img)
         input_data = {'cs':[1178,0,25,16], 
                 'kda':[1103,0,43,13], 'level':[402,684,25,25], 
-                'hp':[550,680,36,16], 'coins': [797,691,51,17],
-                 'map':[1087,527,181,181]}
+                'hp':[550,680,36,16], 'mana':[549,694,37,14],
+                'coins': [797,691,51,17], 'map':[1087,527,181,181]}
         output_data = {}
         map_data = {}
         time = math.floor(time)
 
-        # Only reading coin data every 50 seconds
-        if time%50 != 0:
+        # Only reading coin data every 50 seconds; condition: time%50 != 0
+        if True:
             del input_data['coins']
         
         for area in input_data:
@@ -167,10 +173,19 @@ class Detection:
             w = input_data[area][2]
             h = input_data[area][3]
             numbers = {}
-            if area == 'cs' or area=='kda' or area=='level' or area=='hp' or area=='coins' or area=='turret':
-                for number in range(10):
-                    # print(number)
-                    returned_numbers = self.digit_detect(img = img, copy = number, region = area,
+            if area == 'cs' or area=='kda' or area=='level' or area=='hp' or area=='mana' or area=='coins' or area=='turret':
+                if area == 'kda':
+                    var = 11
+                    area_tmp = area
+                elif area == 'mana':
+                    area_tmp = 'hp'
+                else:
+                    var = 10
+                    area_tmp = area    
+                for number in range(var):
+                    if number == 10:
+                        number = 'x'
+                    returned_numbers = self.digit_detect(img = img, copy = number, region = area_tmp,
                                                 x = x_coor, y = y_coor, width = w, height = h)
                     z = numbers.copy()
                     z.update(returned_numbers)
@@ -183,13 +198,17 @@ class Detection:
                 for i in remove:
                     num_str = num_str.replace(i, '')
                 if area == 'kda' and num_str != '':
-                    kda = []
+                    kda = ['k', 'd', 'a']
+                    count = 0
                     for i in num_str:
                         if i == '':
                             return last_digits
+                        elif i == 'x':
+                            continue
                         else:
-                            kda.append(i)
-                    output_data[area]=kda
+                            output_data[kda[count]] = i
+                            count+=1
+                    # output_data[area]=kda
                     continue
                 if num_str == '':
                     output_data[area]=last_digits[area]
@@ -198,7 +217,7 @@ class Detection:
             else:
                 # fix last thiing later just a minor problem easy when formulating final player positions
                 # in player_interaction.py
-                
+                None
                 if last_pos is None:
                     last = [20,170]
                 else:
@@ -206,6 +225,8 @@ class Detection:
 
                 x_pos, y_pos = self.player_detect(img = img, copy = number, region = area,
                                                 x = x_coor, y = y_coor, width = w, height = h, last=last)
+                # x_pos = 20
+                # y_pos = 170
                 map_data['player_pos']=[x_pos, y_pos]
 
                 # closest distance coordinate to turret_outer --> 6 units
@@ -276,10 +297,11 @@ class Detection:
 
             # FOR NOW --> 
             # Just to know that there are potential enemies around ; take caution...
-            enemy_presence = self.enemy_detect(img=img)
+            # enemy_presence = self.enemy_detect(img=img)
+            # would add this to returned dictionary below... 'enemy_presence': 0,
 
         return {'output_data':output_data, 'map_data':map_data,
-                'enemy_presence': enemy_presence}
+                 'img': img}
 
 
 # Following attempts to read and interpret on-screen information 

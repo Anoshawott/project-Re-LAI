@@ -15,10 +15,9 @@ def realtime_capture(wincap=None):
         
         # screenshot = wincap.get_screenshot()
         
-        data_out, map_out, final_img = Detection().get_data(time=loop_time)
-        print('Digit_data:', data_out)
-        print('Map_data:', map_out)
-        cv2.imshow('player identified?', final_img)
+        data = Detection().get_data(time=loop_time)
+        print('Digit_data:', data['output_data'])
+        print('Map_data:', data['map_data'])
 
         # debugging the loop rate
         print('FPS {}'.format(1/(time.time()-loop_time)))
