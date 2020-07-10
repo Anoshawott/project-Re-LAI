@@ -8,26 +8,39 @@ from player_interaction import PlayerAI
 
 from collections import deque
 
+from tqdm import tqdm
+
 import time
 import numpy as np
 import random
+import os
 
 REPLAY_MEMORY_SIZE = 50_000
 MIN_REPLAY_MEMORY_SIZE = 1000
-MINIBATCH_SIZE = 64
+MINIBATCH_SIZE = 8
 DISCOUNT = 0.99
 UPDATE_TARGET_EVERY = 5
+MIN_REWARD = -200
 
-MODEL_NAME = '256X2'
+EPISODES = 20_000
+
+epsilon = 1
+EPSILON_DECAY = 0.99975
+MIN_EPSILON = 0.001
+
+AGGREGATE_STATS_EVERY = 50
+SHOW_PREVIEW = False
+
+MODEL_NAME = '32X2'
 
 class AIEnv:
     RETURN_DATA = True
     ACTION_SPACE_SIZE = 1270
-    OBSERVATION_SPACE_VALUES = (1270,711,3)
+    OBSERVATION_SPACE_VALUES = (711,1270,3)
     # Reward and Penalty Values
     # also need a reward for mana and hp increases, but make this minimal compared to others 
     rewards = {'cs':1000, 'k':100000, 'd':100000, 'a':1000, 'hp':10, 'mana':10,
-                'tur_outer':10, 'tur_inner':20, 'tur_inhib':30, 
+                'level':10000,'tur_outer':10, 'tur_inner':20, 'tur_inhib':30, 
                 'inhib':30, 'tur_nex_1':40, 'tur_nex_2':40, 'nexus':40}
     cs_reward = 10
 
@@ -41,22 +54,24 @@ class AIEnv:
         # else?
         return observation
     
-    def step(self, action, last_obs=self.play_ai.new_data()):
+    def step(self, action, last_obs=None):
         self.episode_step+=1
 
         self.play_ai.action(action)
+        
+        done = False
 
         if self.RETURN_DATA:
             new_observation = self.play_ai.new_data()
         
         net_reward = 0
         # Reward and Penalty Conditions
-        output_data_comp = new_observation['output_data'] & last_obs['output_data']
+        output_data_comp = new_observation['output_data'].items() & last_obs['output_data'].items()
 
         if len(output_data_comp) != 4:
             for i in output_data_comp:
-                del new_observation['output_data'][i]
-                del last_obs['output_data'][i]
+                del new_observation['output_data'][i[0]]
+                del last_obs['output_data'][i[0]]
             for k in new_observation['output_data']:
                 if k == 'cs' or k == 'level' or k == 'k' or k == 'hp' or k == 'mana':
                     try:
@@ -83,11 +98,11 @@ class AIEnv:
                     total_penalty = -self.rewards[k] * delta
                     net_reward += total_penalty
         
-        tur_data_comp = new_observation['map_data']['tur_dist'] & last_obs['map_data']['tur_dist']
+        tur_data_comp = new_observation['map_data']['tur_dist'].items() & last_obs['map_data']['tur_dist'].items()
         if len(tur_data_comp) != 7:
             for i in tur_data_comp:
-                del new_observation['map_data']['tur_dist'][i]
-                del last_obs['map_data']['tur_dist'][i]
+                del new_observation['map_data']['tur_dist'][i[0]]
+                del last_obs['map_data']['tur_dist'][i[0]]
             for k in new_observation['map_data']['tur_dist']:
                 try:
                     new = int(new_observation['map_data']['tur_dist'][k])   
@@ -99,6 +114,10 @@ class AIEnv:
                 if delta < 0:
                     total_reward = self.rewards[k] * -delta
                     net_reward += total_reward
+                    done = True
+                elif delta > 0:
+                    total_penalty = self.rewards[k] * -delta * 10000
+                    net_reward += total_penalty
         
         tur_hps = {'tur_outer':5000, 'tur_inner':3600, 'tur_inhib':3300, 
                     'inhib':4000, 'tur_nex_1':2700, 'tur_nex_2':2700, 'nexus':5500}
@@ -115,19 +134,19 @@ class AIEnv:
                 if delta < 0:
                     total_reward = self.rewards[k] * -delta
                     net_reward += total_reward
-                if k == 'nexus' and new_observation['map_data']['tur_dist'][k] == 0:
-                    done = True
-                else:
-                    done = False
 
         return new_observation, net_reward, done
 
 env = AIEnv()
 
+ep_rewards = [-200]
+
 random.seed(1)
 np.random.seed(1)
-tf.set_random_seed
+# tf.set_random_seed(1)
 
+if not os.path.isdir('dql_models'):
+    os.makedirs('dql_models')
 
 class ModifiedTensorBoard(TensorBoard):
 
@@ -135,7 +154,7 @@ class ModifiedTensorBoard(TensorBoard):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.step = 1
-        self.writer = tf.summary.FileWriter(self.log_dir)
+        self.writer = tf.summary.create_file_writer(self.log_dir)
 
     # Overriding this method to stop creating default log writer
     def set_model(self, model):
@@ -154,6 +173,17 @@ class ModifiedTensorBoard(TensorBoard):
     # Overrided, so won't close writer
     def on_train_end(self, _):
         pass
+    
+    # def _write_logs(self, logs, index):
+    #     for name, value in logs.items():
+    #         if name in ['batch', 'size']:
+    #             continue
+    #         summary = tf.summary()
+    #         summary_value = summary.value.add()
+    #         summary_value.simple_value = value
+    #         summary_value.tag = name
+    #         self.writer.add_summary(summary, index)
+    #     self.writer.flush()
 
     # Custom method for saving own metrics
     # Creates writer, writes custom metrics and closes writer
@@ -173,26 +203,25 @@ class DQNAgent:
         # handles batch samples so to attain stability in training; prevent overfitting
         self.replay_memory = deque(maxlen=REPLAY_MEMORY_SIZE)
 
-        self.tensorboard = ModifiedTensorBoard(log_dir=f'logs/{MODEL_NAME}-{int(time.time())}')
+        self.tensorboard = ModifiedTensorBoard(log_dir='logs/{}-{}'.format(MODEL_NAME, int(time.time())))
 
         self.target_update_counter = 0
 
 
     def create_model(self):
         model = Sequential()
-        model.add(Conv2D(256, (3,3), input_shape=env.OBSERVATION_SPACE_VALUES))
+        model.add(Conv2D(12, (3,3), input_shape=env.OBSERVATION_SPACE_VALUES))
         model.add(Activation("relu"))
-        model.add(MaxPooling2D(2, 2))
+        model.add(MaxPooling2D(pool_size=(2, 2)))
         model.add(Dropout(0.2))
 
-        model = Sequential()
-        model.add(Conv2D(256, (3,3)))
+        model.add(Conv2D(12, (3,3)))
         model.add(Activation("relu"))
-        model.add(MaxPooling2D(2, 2))
+        model.add(MaxPooling2D(pool_size=(2, 2)))
         model.add(Dropout(0.2))
 
         model.add(Flatten())
-        model.add(Dense(64))
+        model.add(Dense(8))
 
         model.add(Dense(env.ACTION_SPACE_SIZE, activation='linear'))
         model.compile(loss='mse', optimizer=Adam(lr=0.001), metrics=['accuracy'])
@@ -201,8 +230,8 @@ class DQNAgent:
     def update_replay_memory(self, transition):
         self.replay_memory.append(transition)
 
-    def get_qs(self, state, step):
-        return self.model_predict(np.array(state).reshape(-1,*state.shape)/255)[0]
+    def get_qs(self, state):
+        return self.model.predict(np.array(state).reshape(-1,*state.shape)/255)[0]
 
     def train(self, terminal_state, step):
         if len(self.replay_memory) < MIN_REPLAY_MEMORY_SIZE:
@@ -210,10 +239,10 @@ class DQNAgent:
         
         minibatch = random.sample(self.replay_memory, MINIBATCH_SIZE)
 
-        current_states = np.array([transition[0] for transition in minibatch])/255
+        current_states = np.array([transition[0]['img'] for transition in minibatch])/255
         current_qs_list = self.model.predict(current_states)
 
-        new_current_states = np.array([transition[3] for transition in minibatch])/255
+        new_current_states = np.array([transition[3]['img'] for transition in minibatch])/255
         future_qs_list = self.target_model.predict(new_current_states)
 
         X=[]
@@ -229,11 +258,12 @@ class DQNAgent:
             current_qs = current_qs_list[index]
             current_qs[action] = new_q
 
-            X.append(current_state)
+            X.append(current_state['img'])
             y.append(current_qs)
         
-        self.model.fit(np.array(X)/255, np.array(y), batch_size=MINIBATCH_SIZE,
-                        verbose=0, shuffle=False, callbacks=[self.tensorboard] if terminal_state else None)
+        self.model.fit(np.divide(np.array(X), 255), np.array(y), batch_size=MINIBATCH_SIZE,
+                        verbose=0, shuffle=False)
+        # , callbacks=[self.tensorboard] if terminal_state else None
 
         if terminal_state:
             self.target_update_counter += 1 
@@ -241,3 +271,55 @@ class DQNAgent:
         if self.target_update_counter > UPDATE_TARGET_EVERY:
             self.target_model.set_weights(self.model.get_weights())
             self.target_update_counter = 0        
+
+
+agent = DQNAgent()
+
+for i in list(range(4))[::-1]:
+    print(i+1)
+    time.sleep(1)
+
+for episode in tqdm(range(1, EPISODES+1), ascii=True, unit='episode'):
+    agent.tensorboard.step = episode
+
+    episode_reward = 0
+    step = 1
+    current_state = env.reset()
+
+    done = False
+    
+    while not done:
+        if np.random.random() > epsilon:
+            action = np.argmax(agent.get_qs(current_state['img']))
+        else:
+            action = np.random.randint(0,env.ACTION_SPACE_SIZE)
+        
+        new_state, reward, done = env.step(action=action, last_obs=current_state)
+        
+        episode_reward += reward
+
+        # if SHOW_PREVIEW and not episode%AGGREGATE_STATS_EVERY:
+        #     env.render() --> basically outputting image data, don't need to...
+
+        agent.update_replay_memory((current_state, action, reward, new_state, done))
+        agent.train(done, step)
+
+        current_state = new_state
+        step += 1
+
+    # Append episode reward to a list and log stats (every given number of episodes)
+    ep_rewards.append(episode_reward)
+    if not episode % AGGREGATE_STATS_EVERY or episode == 1:
+        average_reward = sum(ep_rewards[-AGGREGATE_STATS_EVERY:])/len(ep_rewards[-AGGREGATE_STATS_EVERY:])
+        min_reward = min(ep_rewards[-AGGREGATE_STATS_EVERY:])
+        max_reward = max(ep_rewards[-AGGREGATE_STATS_EVERY:])
+        # agent.tensorboard.update_stats(reward_avg=average_reward, reward_min=min_reward, reward_max=max_reward, epsilon=epsilon)
+
+        # Save model, but only when min reward is greater or equal a set value
+        if min_reward >= MIN_REWARD:
+            agent.model.save(f'models/{MODEL_NAME}__{max_reward:_>7.2f}max_{average_reward:_>7.2f}avg_{min_reward:_>7.2f}min__{int(time.time())}.model')
+
+    # Decay epsilon
+    if epsilon > MIN_EPSILON:
+        epsilon *= EPSILON_DECAY
+        epsilon = max(MIN_EPSILON, epsilon)

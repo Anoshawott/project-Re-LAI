@@ -8,8 +8,9 @@ import math
 import time
 import random
 
+import tensorflow as tf
+
 from window_cap import WindowCapture
-from detection import Detection
 
 import os
 
@@ -158,12 +159,12 @@ def realtime_capture(wincap):
 
 # Digit recognition for reading numbers off the GUI
 
-# mnist = tf.keras.datasets.mnist
+mnist = tf.keras.datasets.mnist
 
-# (x_train, y_train), (x_test, y_test) = mnist.load_data()
+(x_train, y_train), (x_test, y_test) = mnist.load_data()
 
-# x_train = tf.keras.utils.normalize(x_train, axis=1)
-# x_test = tf.keras.utils.normalize(x_test, axis=1)
+x_train = tf.keras.utils.normalize(x_train, axis=1)
+x_test = tf.keras.utils.normalize(x_test, axis=1)
 
 # model = tf.keras.models.Sequential()
 # model.add(tf.keras.layers.Flatten())
@@ -194,12 +195,12 @@ def realtime_capture(wincap):
 # model.save('models/digit_recognition')
 
 # Having completed model successfully load model here
-# new_model = tf.keras.models.load_model('models/digit_recognition')
-# loss, acc = new_model.evaluate(x_test, y_test)
-# print("Restored model, accuracy: {:5.2f}%".format(100*acc))
+new_model = tf.keras.models.load_model('models/digit_recognition')
+loss, acc = new_model.evaluate(x_test, y_test)
+print("Restored model, accuracy: {:5.2f}%".format(100*acc))
 
 
-# print('digit model passed')
+print('digit model passed')
 
 
 # def digit_detection():
