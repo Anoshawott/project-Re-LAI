@@ -32,7 +32,7 @@ MIN_EPSILON = 0.001
 AGGREGATE_STATS_EVERY = 50
 SHOW_PREVIEW = False
 
-MODEL_NAME = '32X2'
+MODEL_NAME = '12X2'
 
 class AIEnv:
     RETURN_DATA = True
@@ -43,12 +43,11 @@ class AIEnv:
     rewards = {'cs':1000, 'k':100000, 'd':100000, 'a':1000, 'hp':10, 'mana':10,
                 'level':10000,'tur_outer':10, 'tur_inner':20, 'tur_inhib':30, 
                 'inhib':30, 'tur_nex_1':40, 'tur_nex_2':40, 'nexus':40}
-    cs_reward = 10
 
     def reset(self):
         # further this function so that the whole game resets with a new game each time an episode has past
         # use the following code to close windows from within this function: subprocess.call("taskkill /f /im notepad.exe", shell=True)
-        # have timed intervals between each step in the reset process...
+        # have timed intervals between each step in the reset process... --> just need to automate setting up a new game
         # need to also determine how to save each model between episodes...
         
         self.play_ai = PlayerAI()
@@ -120,7 +119,7 @@ class AIEnv:
                         total_reward = self.rewards[k] * -delta
                         net_reward += total_reward
                     elif delta > 0:
-                        total_penalty = self.rewards[k] * -delta * 10000
+                        total_penalty = self.rewards[k] * -delta * 100
                         net_reward += total_penalty
                     if k == 'tur_outer' and new == 0:
                         done = True
@@ -306,9 +305,6 @@ for episode in tqdm(range(1, EPISODES+1), ascii=True, unit='episode'):
         new_state, reward, done = env.step(action=action, last_obs=current_state)
         
         episode_reward += reward
-
-        # if SHOW_PREVIEW and not episode%AGGREGATE_STATS_EVERY:
-        #     env.render() --> basically outputting image data, don't need to...
 
         agent.update_replay_memory((current_state, action, reward, new_state, done))
         agent.train(done, step)
