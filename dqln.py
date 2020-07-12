@@ -14,6 +14,7 @@ import time
 import numpy as np
 import random
 import os
+import subprocess
 
 REPLAY_MEMORY_SIZE = 50_000
 MIN_REPLAY_MEMORY_SIZE = 1000
@@ -45,6 +46,11 @@ class AIEnv:
     cs_reward = 10
 
     def reset(self):
+        # further this function so that the whole game resets with a new game each time an episode has past
+        # use the following code to close windows from within this function: subprocess.call("taskkill /f /im notepad.exe", shell=True)
+        # have timed intervals between each step in the reset process...
+        # need to also determine how to save each model between episodes...
+        
         self.play_ai = PlayerAI()
 
         self.episode_step = 0
@@ -54,7 +60,7 @@ class AIEnv:
         # else?
         return observation
     
-    def step(self, action, last_obs=None):
+    def step(self, action, last_obs=None): 
         self.episode_step+=1
 
         self.play_ai.action(action)
@@ -76,27 +82,29 @@ class AIEnv:
                 if k == 'cs' or k == 'level' or k == 'k' or k == 'hp' or k == 'mana':
                     try:
                         new = int(new_observation['output_data'][k])
-                        old = int(last_obs['output_data'][k])    
+                        old = int(last_obs['output_data'][k])
+                        delta = new - old
+                        if delta < 0:
+                            total_penalty = -self.rewards[k] * delta
+                            net_reward += total_penalty
+                        elif delta > 0:
+                            total_reward = self.rewards[k] * delta
+                            net_reward += total_reward    
                     except:
-                        new = 0
-                        old = 0   
-                    delta = new - old
-                    if delta < 0:
-                        total_penalty = -self.rewards[k] * delta
-                        net_reward += total_penalty
-                    else:
-                        total_reward = self.rewards[k] * delta
-                        net_reward += total_reward
+                        None
+                    
                 else:
                     try:
                         new = int(new_observation['output_data'][k])    
                         old = int(last_obs['output_data'][k])
+                        delta = new - old
+                        total_penalty = -self.rewards[k] * delta
+                        net_reward += total_penalty
+                        if delta > 0:
+                            done = True
                     except:
-                        new = 0
-                        old = 0                        
-                    delta = new - old
-                    total_penalty = -self.rewards[k] * delta
-                    net_reward += total_penalty
+                        None                     
+                    
         
         tur_data_comp = new_observation['map_data']['tur_dist'].items() & last_obs['map_data']['tur_dist'].items()
         if len(tur_data_comp) != 7:
@@ -107,17 +115,18 @@ class AIEnv:
                 try:
                     new = int(new_observation['map_data']['tur_dist'][k])   
                     old = int(last_obs['map_data']['tur_dist'][k]) 
+                    delta = new - old
+                    if delta < 0:
+                        total_reward = self.rewards[k] * -delta
+                        net_reward += total_reward
+                    elif delta > 0:
+                        total_penalty = self.rewards[k] * -delta * 10000
+                        net_reward += total_penalty
+                    if k == 'tur_outer' and new == 0:
+                        done = True
                 except:
-                    new = 0
-                    old = 0  
-                delta = new - old
-                if delta < 0:
-                    total_reward = self.rewards[k] * -delta
-                    net_reward += total_reward
-                    done = True
-                elif delta > 0:
-                    total_penalty = self.rewards[k] * -delta * 10000
-                    net_reward += total_penalty
+                    None 
+                
         
         tur_hps = {'tur_outer':5000, 'tur_inner':3600, 'tur_inhib':3300, 
                     'inhib':4000, 'tur_nex_1':2700, 'tur_nex_2':2700, 'nexus':5500}
