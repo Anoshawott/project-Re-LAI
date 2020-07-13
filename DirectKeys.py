@@ -20,6 +20,7 @@ R = 0x13
 D = 0x20
 F = 0x21
 B = 0x30
+START = 0xDC
 
 # C struct redefinitions 
 PUL = ctypes.POINTER(ctypes.c_ulong)

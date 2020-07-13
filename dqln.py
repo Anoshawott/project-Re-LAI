@@ -5,6 +5,8 @@ from keras.optimizers import Adam
 import tensorflow as tf
 
 from player_interaction import PlayerAI
+from env_reset import EnvReset
+from choice_create import ChoiceCreate
 
 from collections import deque
 
@@ -15,6 +17,7 @@ import numpy as np
 import random
 import os
 import subprocess
+import pickle
 
 REPLAY_MEMORY_SIZE = 50_000
 MIN_REPLAY_MEMORY_SIZE = 1000
@@ -40,7 +43,7 @@ class AIEnv:
     OBSERVATION_SPACE_VALUES = (711,1270,3)
     # Reward and Penalty Values
     # also need a reward for mana and hp increases, but make this minimal compared to others 
-    rewards = {'cs':1000, 'k':100000, 'd':100000, 'a':1000, 'hp':10, 'mana':10,
+    rewards = {'cs':1000, 'k':100000, 'd':1000000, 'a':1000, 'hp':10, 'mana':10,
                 'level':10000,'tur_outer':10, 'tur_inner':20, 'tur_inhib':30, 
                 'inhib':30, 'tur_nex_1':40, 'tur_nex_2':40, 'nexus':40}
 
@@ -49,7 +52,11 @@ class AIEnv:
         # use the following code to close windows from within this function: subprocess.call("taskkill /f /im notepad.exe", shell=True)
         # have timed intervals between each step in the reset process... --> just need to automate setting up a new game
         # need to also determine how to save each model between episodes...
-        
+        EnvReset().game_reset()
+
+        ChoiceCreate().min_tur_save()
+        ChoiceCreate().tur_status_save()
+
         self.play_ai = PlayerAI()
 
         self.episode_step = 0
@@ -71,6 +78,15 @@ class AIEnv:
         
         net_reward = 0
         # Reward and Penalty Conditions
+        try:
+            if int(new_observation['output_data']['hp']) == 0:
+                done = True
+        except:
+            None
+        
+        # Have a list that appends turrets that have been destroyed to have them removed and then added to the distance left to turret
+        # use min-max method to optimising distance reward reward since the ai rn is prioritising reaching the nexus before destroying
+        # anything else first...
         output_data_comp = new_observation['output_data'].items() & last_obs['output_data'].items()
 
         if len(output_data_comp) != 4:
@@ -88,7 +104,9 @@ class AIEnv:
                             net_reward += total_penalty
                         elif delta > 0:
                             total_reward = self.rewards[k] * delta
-                            net_reward += total_reward    
+                            net_reward += total_reward
+                        if k == 'hp' and new == 0:
+                            done = True    
                     except:
                         None
                     
@@ -99,12 +117,45 @@ class AIEnv:
                         delta = new - old
                         total_penalty = -self.rewards[k] * delta
                         net_reward += total_penalty
+                        print(k)
                         if delta > 0:
                             done = True
                     except:
                         None                     
-                    
-        
+
+
+        tur_hps = {'tur_outer':5000, 'tur_inner':3600, 'tur_inhib':3300, 
+                    'inhib':4000, 'tur_nex_1':2700, 'tur_nex_2':2700, 'nexus':5500}
+        tur_hp_data_comp = not new_observation['map_data']['tur_hp']
+        if tur_hp_data_comp != True:
+            for k in new_observation['map_data']['tur_hp']:
+                try:
+                    new = int(new_observation['map_data']['tur_hp'][k])
+                    old = tur_hps[k]
+                    delta = new - old
+                    if delta < 0:
+                        total_reward = self.rewards[k] * -delta
+                        net_reward += total_reward
+                    if new == 0:
+                        tur_status = pickle.load(open('tur_status.pickle', 'rb'))
+                        tur_status[k] = 0
+                        try: 
+                            tur_status[tur_status.index(k) + 1] = 1
+                            pickle_out = open('tur_status.pickle','wb')
+                            pickle.dump(tur_status, pickle_out)
+                            pickle_out.close()
+                        except: 
+                            done = True     
+                except:
+                    None  
+                
+        # Reading min dictionary of values to read and update min distances
+        tur_status = pickle.load(open('tur_status.pickle', 'rb'))
+        for i in tur_status:
+            if tur_status[i] == 0:
+                del new_observation['map_data']['tur_dist'][i]
+                del last_obs['map_data']['tur_dist'][i]
+
         tur_data_comp = new_observation['map_data']['tur_dist'].items() & last_obs['map_data']['tur_dist'].items()
         if len(tur_data_comp) != 7:
             for i in tur_data_comp:
@@ -114,34 +165,24 @@ class AIEnv:
                 try:
                     new = int(new_observation['map_data']['tur_dist'][k])   
                     old = int(last_obs['map_data']['tur_dist'][k]) 
-                    delta = new - old
-                    if delta < 0:
-                        total_reward = self.rewards[k] * -delta
-                        net_reward += total_reward
-                    elif delta > 0:
-                        total_penalty = self.rewards[k] * -delta * 100
-                        net_reward += total_penalty
-                    if k == 'tur_outer' and new == 0:
-                        done = True
+                    min_tur = pickle.load(open('min_tur.pickle', 'rb'))
+                    if new < min_tur[k]:
+                        min_tur[k] = new
+                        pickle_out = open('min_tur.pickle','wb')
+                        pickle.dump(min_tur, pickle_out)
+                        pickle_out.close()
+
+                        delta = new - old
+                        if delta < 0:
+                            total_reward = self.rewards[k] * -delta
+                            net_reward += total_reward
+                        elif delta > 0:
+                            total_penalty = self.rewards[k] * -delta * 100
+                            net_reward += total_penalty
+                    # if k == 'tur_outer' and new == 0:
+                    #     done = True
                 except:
                     None 
-                
-        
-        tur_hps = {'tur_outer':5000, 'tur_inner':3600, 'tur_inhib':3300, 
-                    'inhib':4000, 'tur_nex_1':2700, 'tur_nex_2':2700, 'nexus':5500}
-        tur_hp_data_comp = not new_observation['map_data']['tur_hp']
-        if tur_hp_data_comp != True:
-            for k in new_observation['map_data']['tur_dist']:
-                try:
-                    new = int(new_observation['map_data']['tur_dist'][k])
-                    old = tur_hps[k]   
-                except:
-                    new = 0
-                    old = 0  
-                delta = new - old
-                if delta < 0:
-                    total_reward = self.rewards[k] * -delta
-                    net_reward += total_reward
 
         return new_observation, net_reward, done
 
@@ -151,7 +192,7 @@ ep_rewards = [-200]
 
 random.seed(1)
 np.random.seed(1)
-# tf.set_random_seed(1)
+tf.random.set_seed(1)
 
 if not os.path.isdir('dql_models'):
     os.makedirs('dql_models')

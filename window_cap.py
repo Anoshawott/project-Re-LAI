@@ -18,7 +18,7 @@ class WindowCapture:
         self.hwnd = win32gui.FindWindow(None, window_name)
         if not self.hwnd:
             ## CALL GAME END FUNCTION HERE TO INITATE LOOP
-            raise Exception('Window not found: {}'.format(window_name))
+            raise ValueError('Window not found: {}'.format(window_name))
 
 
         # Defining monitor width and height
