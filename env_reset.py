@@ -18,10 +18,10 @@ class EnvReset:
             WindowCapture('League of Legends (TM) Client')
             PressKey(ESC)
             ReleaseKey(ESC)
-            time.sleep(0.01)
+            time.sleep(1)
 
             mouse.position = (606, 841)
-            mouse.click(Button.left, 1)
+            mouse.click(Button.left, 2)
             time.sleep(1)
 
             mouse.position = (842, 537)

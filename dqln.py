@@ -18,6 +18,7 @@ import random
 import os
 import subprocess
 import pickle
+import copy
 
 REPLAY_MEMORY_SIZE = 50_000
 MIN_REPLAY_MEMORY_SIZE = 1000
@@ -28,6 +29,7 @@ MIN_REWARD = -200
 
 EPISODES = 20_000
 
+# Consider changing epsilon??
 epsilon = 1
 EPSILON_DECAY = 0.99975
 MIN_EPSILON = 0.001
@@ -39,7 +41,7 @@ MODEL_NAME = '12X2'
 
 class AIEnv:
     RETURN_DATA = True
-    ACTION_SPACE_SIZE = 1270
+    ACTION_SPACE_SIZE = 1271
     OBSERVATION_SPACE_VALUES = (711,1270,3)
     # Reward and Penalty Values
     # also need a reward for mana and hp increases, but make this minimal compared to others 
@@ -84,6 +86,10 @@ class AIEnv:
         except:
             None
         
+
+        tmp_new = copy.deepcopy(new_observation)
+        tmp_old = copy.deepcopy(last_obs)
+
         # Have a list that appends turrets that have been destroyed to have them removed and then added to the distance left to turret
         # use min-max method to optimising distance reward reward since the ai rn is prioritising reaching the nexus before destroying
         # anything else first...
@@ -91,20 +97,24 @@ class AIEnv:
 
         if len(output_data_comp) != 4:
             for i in output_data_comp:
-                del new_observation['output_data'][i[0]]
-                del last_obs['output_data'][i[0]]
-            for k in new_observation['output_data']:
+                del tmp_new['output_data'][i[0]]
+                del tmp_old['output_data'][i[0]]
+            for k in tmp_new['output_data']:
                 if k == 'cs' or k == 'level' or k == 'k' or k == 'hp' or k == 'mana':
                     try:
                         new = int(new_observation['output_data'][k])
                         old = int(last_obs['output_data'][k])
                         delta = new - old
                         if delta < 0:
-                            total_penalty = -self.rewards[k] * delta
+                            total_penalty = self.rewards[k] * delta
                             net_reward += total_penalty
-                        elif delta > 0:
-                            total_reward = self.rewards[k] * delta
-                            net_reward += total_reward
+                            print('1')
+                        # elif delta > 0:
+                        #     total_reward = self.rewards[k] * delta * 0.001
+                        #     net_reward += total_reward
+                        #     print(new)
+                        #     print(old)
+                        #     print('2')
                         if k == 'hp' and new == 0:
                             done = True    
                     except:
@@ -117,7 +127,7 @@ class AIEnv:
                         delta = new - old
                         total_penalty = -self.rewards[k] * delta
                         net_reward += total_penalty
-                        print(k)
+                        print('3')
                         if delta > 0:
                             done = True
                     except:
@@ -136,6 +146,7 @@ class AIEnv:
                     if delta < 0:
                         total_reward = self.rewards[k] * -delta
                         net_reward += total_reward
+                        print('4')
                     if new == 0:
                         tur_status = pickle.load(open('tur_status.pickle', 'rb'))
                         tur_status[k] = 0
@@ -151,22 +162,28 @@ class AIEnv:
                 
         # Reading min dictionary of values to read and update min distances
         tur_status = pickle.load(open('tur_status.pickle', 'rb'))
+        # print(new_observation['output_data'], new_observation['map_data'])
+        # print(last_obs['output_data'], new_observation['map_data'])
+        # print('----------------------')
+        # print(tmp_new['output_data'], tmp_new['map_data'])
+        # print(tmp_old['output_data'], tmp_old['map_data'])
         for i in tur_status:
             if tur_status[i] == 0:
-                del new_observation['map_data']['tur_dist'][i]
-                del last_obs['map_data']['tur_dist'][i]
+                del tmp_new['map_data']['tur_dist'][i]
+                del tmp_old['map_data']['tur_dist'][i]
 
-        tur_data_comp = new_observation['map_data']['tur_dist'].items() & last_obs['map_data']['tur_dist'].items()
+        tur_data_comp = tmp_new['map_data']['tur_dist'].items() & tmp_old['map_data']['tur_dist'].items()
         if len(tur_data_comp) != 7:
             for i in tur_data_comp:
-                del new_observation['map_data']['tur_dist'][i[0]]
-                del last_obs['map_data']['tur_dist'][i[0]]
-            for k in new_observation['map_data']['tur_dist']:
+                del tmp_new['map_data']['tur_dist'][i[0]]
+                del tmp_old['map_data']['tur_dist'][i[0]]
+            for k in tmp_new['map_data']['tur_dist']:
                 try:
                     new = int(new_observation['map_data']['tur_dist'][k])   
                     old = int(last_obs['map_data']['tur_dist'][k]) 
                     min_tur = pickle.load(open('min_tur.pickle', 'rb'))
-                    if new < min_tur[k]:
+                    if True:    #new < min_tur[k]
+                        print('yes/new:',new)
                         min_tur[k] = new
                         pickle_out = open('min_tur.pickle','wb')
                         pickle.dump(min_tur, pickle_out)
@@ -176,9 +193,11 @@ class AIEnv:
                         if delta < 0:
                             total_reward = self.rewards[k] * -delta
                             net_reward += total_reward
+                            print('5')
                         elif delta > 0:
-                            total_penalty = self.rewards[k] * -delta * 100
+                            total_penalty = self.rewards[k] * -delta
                             net_reward += total_penalty
+                            print('6')
                     # if k == 'tur_outer' and new == 0:
                     #     done = True
                 except:
@@ -342,17 +361,21 @@ for episode in tqdm(range(1, EPISODES+1), ascii=True, unit='episode'):
             action = np.argmax(agent.get_qs(current_state['img']))
         else:
             action = np.random.randint(0,env.ACTION_SPACE_SIZE)
-        
+        print(step)
         new_state, reward, done = env.step(action=action, last_obs=current_state)
         
         episode_reward += reward
-
+        print('episode_reward:', episode_reward)
+        print('-------------------')
         agent.update_replay_memory((current_state, action, reward, new_state, done))
         agent.train(done, step)
 
-        current_state = new_state
+        current_state = new_state.copy()
         step += 1
+    
+    # NEED TO ADD FUNCTION TO SAVE EVERY EPISODE!!! --> every 5 episodes?
 
+    print('episode_reward:', episode_reward)
     # Append episode reward to a list and log stats (every given number of episodes)
     ep_rewards.append(episode_reward)
     if not episode % AGGREGATE_STATS_EVERY or episode == 1:
@@ -362,8 +385,15 @@ for episode in tqdm(range(1, EPISODES+1), ascii=True, unit='episode'):
         # agent.tensorboard.update_stats(reward_avg=average_reward, reward_min=min_reward, reward_max=max_reward, epsilon=epsilon)
 
         # Save model, but only when min reward is greater or equal a set value
-        if min_reward >= MIN_REWARD:
-            agent.model.save(f'models/{MODEL_NAME}__{max_reward:_>7.2f}max_{average_reward:_>7.2f}avg_{min_reward:_>7.2f}min__{int(time.time())}.model')
+        if average_reward >= MIN_REWARD:
+            agent.model.save(f'dql_best_avg/{MODEL_NAME}__{max_reward:_>7.2f}max_{average_reward:_>7.2f}avg_{min_reward:_>7.2f}min__{int(time.time())}.model')
+
+    if episode%5 == 0:
+        agent.model.save(f'dql_models_per_5/{MODEL_NAME}__ep_{episode:_>7.2f}_{max_reward:_>7.2f}max_{average_reward:_>7.2f}avg_{min_reward:_>7.2f}min__{int(time.time())}.model')
+
+    print('avg_reward:', average_reward)
+    print('min_reward:', min_reward)
+    print('max_reward:', max_reward)
 
     # Decay epsilon
     if epsilon > MIN_EPSILON:

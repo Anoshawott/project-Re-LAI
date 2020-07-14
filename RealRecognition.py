@@ -38,7 +38,7 @@ class Detection:
         w, h = template.shape[::-1]
         res = cv2.matchTemplate(im_gray, template, cv2.TM_CCOEFF_NORMED)
         
-        if region == 'hp':
+        if region == 'hp' or region == 'kda':
             threshold = 0.9
         # elif region == 'hp-tur':
         #     threshold = 0.77
@@ -198,6 +198,7 @@ class Detection:
                 for i in remove:
                     num_str = num_str.replace(i, '')
                 if area == 'kda' and num_str != '':
+                    print(num_str)
                     kda = ['k', 'd', 'a']
                     count = 0
                     for i in num_str:

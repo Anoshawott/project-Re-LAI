@@ -26,7 +26,7 @@ class PlayerAI:
         # movement positions within the radius --> therefore 5*36 = 180 choices...
 
         # MAKE A FUNCTION THAT TAKES A CHOICE NUMBER WHICH IS ASSIGNED TO A VALUE IN 
-        # A LIST THAT GIVES THE RADII AND RADIAN POSITION ON THE GIVEN CIRCLE...
+        # A LIST THAT GIVES THE RADII AND RADIAN POSITION ON THE GIVEN CIRCLE...(refer to choice_create.py)
 
         # Reading choices dictionary made from choices_create.py
         if choice <= 1259:
@@ -42,8 +42,13 @@ class PlayerAI:
             ReleaseKey(choice[0])
             ReleaseKey(choice[1])
         else:
-            PressKey(choice[0])
-            ReleaseKey(choice[0])
+            if choice[0] == B:
+                PressKey(choice[0])
+                time.sleep(3)
+                ReleaseKey(choice[0])
+            else:
+                PressKey(choice[0])
+                ReleaseKey(choice[0])
         return
 
     def move(self, r=None, deg=None, ability=None):

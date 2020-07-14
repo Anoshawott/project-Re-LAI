@@ -9,7 +9,7 @@ class ChoiceCreate:
         radii = [100,200,400,550,700]
         keyboard_actions = ['', Q, W, E, R, D, F]
         abilities = [Q, W, E, R]
-        items = [num_1,num_2,num_3,num_4,num_5,num_6]
+        items = [num_1,num_2,num_3,num_4,num_5,num_6,B]
 
         # Movement and ability actions
         count=0
