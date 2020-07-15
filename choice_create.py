@@ -6,7 +6,7 @@ class ChoiceCreate:
         choices = {}
 
         # replace keyboard inputs with variables from DirectKeys
-        radii = [100,200,400,550,700]
+        radii = [200,400]
         keyboard_actions = ['', Q, W, E, R, D, F]
         abilities = [Q, W, E, R]
         items = [num_1,num_2,num_3,num_4,num_5,num_6,B]

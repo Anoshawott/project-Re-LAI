@@ -37,11 +37,11 @@ MIN_EPSILON = 0.001
 AGGREGATE_STATS_EVERY = 50
 SHOW_PREVIEW = False
 
-MODEL_NAME = '12X2'
+MODEL_NAME = '2X12'
 
 class AIEnv:
     RETURN_DATA = True
-    ACTION_SPACE_SIZE = 1271
+    ACTION_SPACE_SIZE = 515
     OBSERVATION_SPACE_VALUES = (711,1270,3)
     # Reward and Penalty Values
     # also need a reward for mana and hp increases, but make this minimal compared to others 
@@ -393,7 +393,7 @@ for episode in tqdm(range(1, EPISODES+1), ascii=True, unit='episode'):
             agent.model.save(f'dql_best_avg/{MODEL_NAME}__{max_reward:_>7.2f}max_{average_reward:_>7.2f}avg_{min_reward:_>7.2f}min__{int(time.time())}.model')
 
     if episode%5 == 0:
-        agent.model.save(f'dql_models_per_5/{MODEL_NAME}__ep_{episode+20:_>7.2f}_{max_reward:_>7.2f}max_{average_reward:_>7.2f}avg_{min_reward:_>7.2f}min__{int(time.time())}.model')
+        agent.model.save(f'dql_models_per_5/{MODEL_NAME}__ep_{episode:_>7.2f}_{max_reward:_>7.2f}max_{average_reward:_>7.2f}avg_{min_reward:_>7.2f}min__{int(time.time())}.model')
 
     print('avg_reward:', average_reward)
     print('min_reward:', min_reward)
