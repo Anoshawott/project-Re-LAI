@@ -262,10 +262,14 @@ class DQNAgent:
     def __init__(self):
 
         # main model --> gets trained every step
-        self.model = self.create_model()
+        # self.model = self.create_model()
+
+        # Loading from first run
+        self.model = tf.keras.models.load_model('dql_models_per_5/12X2__ep___20.00_-200.00max_-4870.00avg_-9540.00min__1594721228.model')
 
         # target model --> this is what we .predict against every step
-        self.target_model = self.create_model()
+        # self.target_model = self.create_model() 
+        self.target_model = tf.keras.models.load_model('dql_models_per_5/12X2__ep___20.00_-200.00max_-4870.00avg_-9540.00min__1594721228.model')
         self.target_model.set_weights(self.model.get_weights())
 
         # handles batch samples so to attain stability in training; prevent overfitting
@@ -389,7 +393,7 @@ for episode in tqdm(range(1, EPISODES+1), ascii=True, unit='episode'):
             agent.model.save(f'dql_best_avg/{MODEL_NAME}__{max_reward:_>7.2f}max_{average_reward:_>7.2f}avg_{min_reward:_>7.2f}min__{int(time.time())}.model')
 
     if episode%5 == 0:
-        agent.model.save(f'dql_models_per_5/{MODEL_NAME}__ep_{episode:_>7.2f}_{max_reward:_>7.2f}max_{average_reward:_>7.2f}avg_{min_reward:_>7.2f}min__{int(time.time())}.model')
+        agent.model.save(f'dql_models_per_5/{MODEL_NAME}__ep_{episode+20:_>7.2f}_{max_reward:_>7.2f}max_{average_reward:_>7.2f}avg_{min_reward:_>7.2f}min__{int(time.time())}.model')
 
     print('avg_reward:', average_reward)
     print('min_reward:', min_reward)

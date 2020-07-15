@@ -46,6 +46,7 @@ class PlayerAI:
                 PressKey(choice[0])
                 time.sleep(3)
                 ReleaseKey(choice[0])
+                time.sleep(10)
             else:
                 PressKey(choice[0])
                 ReleaseKey(choice[0])
