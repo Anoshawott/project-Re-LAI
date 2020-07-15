@@ -182,7 +182,7 @@ class AIEnv:
                     new = int(new_observation['map_data']['tur_dist'][k])   
                     old = int(last_obs['map_data']['tur_dist'][k]) 
                     min_tur = pickle.load(open('min_tur.pickle', 'rb'))
-                    if True:    #new < min_tur[k]
+                    if new < min_tur[k]:    #new < min_tur[k]
                         print('yes/new:',new)
                         min_tur[k] = new
                         pickle_out = open('min_tur.pickle','wb')
@@ -191,9 +191,14 @@ class AIEnv:
 
                         delta = new - old
                         if delta < 0:
-                            total_reward = self.rewards[k] * -delta
+                            total_reward = self.rewards[k] * -delta * 10
                             net_reward += total_reward
                             print('5')
+                    else:
+                        if delta < 0:
+                            total_reward = self.rewards[k] * -delta
+                            net_reward += total_reward
+                            print('5.1')
                         elif delta > 0:
                             total_penalty = self.rewards[k] * -delta
                             net_reward += total_penalty
