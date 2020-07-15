@@ -195,6 +195,7 @@ class AIEnv:
                             net_reward += total_reward
                             print('5')
                     else:
+                        delta = new - old
                         if delta < 0:
                             total_reward = self.rewards[k] * -delta
                             net_reward += total_reward
