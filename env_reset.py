@@ -160,7 +160,7 @@ class EnvReset:
 
         mouse.position = (964, 719)
         mouse.click(Button.left, 1)
-        time.sleep(40)
+        time.sleep(50)
 
         # Getting start items
         mouse.position = (964, 719)
@@ -197,5 +197,10 @@ class EnvReset:
         PressKey(Y)
         ReleaseKey(Y)
         time.sleep(1)
+
+        # Getting in position
+        mouse.position = (1492, 810)
+        mouse.click(Button.right, 1)
+        time.sleep(35)
 
         print('Done!')

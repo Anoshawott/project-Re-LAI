@@ -29,7 +29,7 @@ class PlayerAI:
         # A LIST THAT GIVES THE RADII AND RADIAN POSITION ON THE GIVEN CIRCLE...(refer to choice_create.py)
 
         # Reading choices dictionary made from choices_create.py
-        if choice <= 1259:
+        if choice < 504:
             self.move(r=self.choices[choice][0], deg=self.choices[choice][1], 
                         ability=self.choices[choice][2])
         else:

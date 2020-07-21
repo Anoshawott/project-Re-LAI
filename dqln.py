@@ -22,7 +22,7 @@ import copy
 
 REPLAY_MEMORY_SIZE = 50_000
 MIN_REPLAY_MEMORY_SIZE = 1000
-MINIBATCH_SIZE = 8
+MINIBATCH_SIZE = 6
 DISCOUNT = 0.99
 UPDATE_TARGET_EVERY = 5
 MIN_REWARD = -200
@@ -34,6 +34,13 @@ epsilon = 1
 EPSILON_DECAY = 0.99975
 MIN_EPSILON = 0.001
 
+# Adjust below condition to true episode number
+thing = 0
+while thing < 46:
+    epsilon *= EPSILON_DECAY
+    epsilon = max(MIN_EPSILON, epsilon)
+    thing+=1
+
 AGGREGATE_STATS_EVERY = 50
 SHOW_PREVIEW = False
 
@@ -41,7 +48,7 @@ MODEL_NAME = '2X12'
 
 class AIEnv:
     RETURN_DATA = True
-    ACTION_SPACE_SIZE = 515
+    ACTION_SPACE_SIZE = 514
     OBSERVATION_SPACE_VALUES = (711,1270,3)
     # Reward and Penalty Values
     # also need a reward for mana and hp increases, but make this minimal compared to others 
@@ -68,7 +75,7 @@ class AIEnv:
         # else?
         return observation
     
-    def step(self, action, last_obs=None): 
+    def step(self, action, last_obs=None, count=None): 
         self.episode_step+=1
 
         self.play_ai.action(action)
@@ -100,7 +107,7 @@ class AIEnv:
                 del tmp_new['output_data'][i[0]]
                 del tmp_old['output_data'][i[0]]
             for k in tmp_new['output_data']:
-                if k == 'cs' or k == 'level' or k == 'k' or k == 'hp' or k == 'mana':
+                if k == 'cs' or k == 'level' or k == 'k' or k == 'a' or k == 'hp' or k == 'mana':
                     try:
                         new = int(new_observation['output_data'][k])
                         old = int(last_obs['output_data'][k])
@@ -172,6 +179,15 @@ class AIEnv:
                 del tmp_new['map_data']['tur_dist'][i]
                 del tmp_old['map_data']['tur_dist'][i]
 
+        if new_observation['map_data']['player_pos'] == [20,170]:
+            count+=1
+        else:
+            count=0
+        
+        if count > 4:
+            pos_penalty = -1
+            net_reward += pos_penalty
+
         tur_data_comp = tmp_new['map_data']['tur_dist'].items() & tmp_old['map_data']['tur_dist'].items()
         if len(tur_data_comp) != 7:
             for i in tur_data_comp:
@@ -182,7 +198,7 @@ class AIEnv:
                     new = int(new_observation['map_data']['tur_dist'][k])   
                     old = int(last_obs['map_data']['tur_dist'][k]) 
                     min_tur = pickle.load(open('min_tur.pickle', 'rb'))
-                    if new < min_tur[k]:    #new < min_tur[k]
+                    if new < min_tur[k] and last_obs['map_data']['player_pos'] != [20,170]:    #new < min_tur[k]
                         print('yes/new:',new)
                         min_tur[k] = new
                         pickle_out = open('min_tur.pickle','wb')
@@ -191,12 +207,12 @@ class AIEnv:
 
                         delta = new - old
                         if delta < 0:
-                            total_reward = self.rewards[k] * -delta * 10
+                            total_reward = self.rewards[k] * -delta * 2
                             net_reward += total_reward
                             print('5')
                     else:
                         delta = new - old
-                        if delta < 0:
+                        if delta < 0 and last_obs['map_data']['player_pos'] != [20,170]:
                             total_reward = self.rewards[k] * -delta
                             net_reward += total_reward
                             print('5.1')
@@ -209,7 +225,7 @@ class AIEnv:
                 except:
                     None 
 
-        return new_observation, net_reward, done
+        return new_observation, net_reward, done, count
 
 env = AIEnv()
 
@@ -271,11 +287,11 @@ class DQNAgent:
         # self.model = self.create_model()
 
         # Loading from first run
-        self.model = tf.keras.models.load_model('dql_models_per_5/12X2__ep___20.00_-200.00max_-4870.00avg_-9540.00min__1594721228.model')
+        self.model = tf.keras.models.load_model('dql_models4/2X12__ep___45.00_-200.00max_-11443.00avg_-22686.00min__1594957431.model')
 
         # target model --> this is what we .predict against every step
         # self.target_model = self.create_model() 
-        self.target_model = tf.keras.models.load_model('dql_models_per_5/12X2__ep___20.00_-200.00max_-4870.00avg_-9540.00min__1594721228.model')
+        self.target_model = tf.keras.models.load_model('dql_models4/2X12__ep___45.00_-200.00max_-11443.00avg_-22686.00min__1594957431.model')
         self.target_model.set_weights(self.model.get_weights())
 
         # handles batch samples so to attain stability in training; prevent overfitting
@@ -342,6 +358,7 @@ class DQNAgent:
         self.model.fit(np.divide(np.array(X), 255), np.array(y), batch_size=MINIBATCH_SIZE,
                         verbose=0, shuffle=False)
         # , callbacks=[self.tensorboard] if terminal_state else None
+        print('fitting?')
 
         if terminal_state:
             self.target_update_counter += 1 
@@ -366,13 +383,14 @@ for episode in tqdm(range(1, EPISODES+1), ascii=True, unit='episode'):
 
     done = False
     
+    num = 0
     while not done:
         if np.random.random() > epsilon:
             action = np.argmax(agent.get_qs(current_state['img']))
         else:
             action = np.random.randint(0,env.ACTION_SPACE_SIZE)
         print(step)
-        new_state, reward, done = env.step(action=action, last_obs=current_state)
+        new_state, reward, done, num = env.step(action=action, last_obs=current_state, count=num)
         
         episode_reward += reward
         print('episode_reward:', episode_reward)
@@ -398,14 +416,15 @@ for episode in tqdm(range(1, EPISODES+1), ascii=True, unit='episode'):
         if average_reward >= MIN_REWARD:
             agent.model.save(f'dql_best_avg/{MODEL_NAME}__{max_reward:_>7.2f}max_{average_reward:_>7.2f}avg_{min_reward:_>7.2f}min__{int(time.time())}.model')
 
-    if episode%5 == 0:
-        agent.model.save(f'dql_models_per_5/{MODEL_NAME}__ep_{episode:_>7.2f}_{max_reward:_>7.2f}max_{average_reward:_>7.2f}avg_{min_reward:_>7.2f}min__{int(time.time())}.model')
+    if (episode+45)%5 == 0:
+        agent.model.save(f'dql_models4/{MODEL_NAME}__ep_{episode+45:_>7.2f}_{max_reward:_>7.2f}max_{average_reward:_>7.2f}avg_{min_reward:_>7.2f}min__{int(time.time())}.model')
 
     print('avg_reward:', average_reward)
     print('min_reward:', min_reward)
     print('max_reward:', max_reward)
 
-    # Decay epsilon
+    # Decay epsilon 
+
     if epsilon > MIN_EPSILON:
         epsilon *= EPSILON_DECAY
         epsilon = max(MIN_EPSILON, epsilon)
