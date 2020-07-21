@@ -20,6 +20,8 @@ import subprocess
 import pickle
 import copy
 
+FROM = 110
+
 REPLAY_MEMORY_SIZE = 50_000
 MIN_REPLAY_MEMORY_SIZE = 1000
 MINIBATCH_SIZE = 6
@@ -36,7 +38,7 @@ MIN_EPSILON = 0.001
 
 # Adjust below condition to true episode number
 thing = 0
-while thing < 46:
+while thing < FROM + 1:
     epsilon *= EPSILON_DECAY
     epsilon = max(MIN_EPSILON, epsilon)
     thing+=1
@@ -52,8 +54,8 @@ class AIEnv:
     OBSERVATION_SPACE_VALUES = (711,1270,3)
     # Reward and Penalty Values
     # also need a reward for mana and hp increases, but make this minimal compared to others 
-    rewards = {'cs':1000, 'k':100000, 'd':1000000, 'a':1000, 'hp':10, 'mana':10,
-                'level':10000,'tur_outer':10, 'tur_inner':20, 'tur_inhib':30, 
+    rewards = {'cs':10000, 'k':1000000, 'd':1000000, 'a':100000, 'hp':1, 'mana':1,
+                'level':50000,'tur_outer':10, 'tur_inner':20, 'tur_inhib':30, 
                 'inhib':30, 'tur_nex_1':40, 'tur_nex_2':40, 'nexus':40}
 
     def reset(self):
@@ -90,6 +92,12 @@ class AIEnv:
         try:
             if int(new_observation['output_data']['hp']) == 0:
                 done = True
+                new = int(new_observation['output_data']['d'])    
+                old = int(last_obs['output_data']['d'])
+                delta = new - old
+                total_penalty = -self.rewards['d'] * delta
+                net_reward += total_penalty
+                print('DEAD!')
         except:
             None
         
@@ -116,29 +124,35 @@ class AIEnv:
                             total_penalty = self.rewards[k] * delta
                             net_reward += total_penalty
                             print('1')
-                        # elif delta > 0:
-                        #     total_reward = self.rewards[k] * delta * 0.001
-                        #     net_reward += total_reward
-                        #     print(new)
-                        #     print(old)
-                        #     print('2')
-                        if k == 'hp' and new == 0:
-                            done = True    
+                        elif delta > 0:
+                            if k != 'cs':
+                                total_reward = self.rewards[k] * delta * 0.001
+                            else:
+                                total_reward = self.rewards[k] * delta
+                            net_reward += total_reward
+                            print(new)
+                            print(old)
+                            print('2')
+                        # if k == 'hp' and new == 0:
+                        #     done = True    
+                        #     total_penalty = self.rewards[k] * delta
+                        #     net_reward += total_penalty
+                        #     print('DEAD!')
                     except:
                         None
                     
-                else:
-                    try:
-                        new = int(new_observation['output_data'][k])    
-                        old = int(last_obs['output_data'][k])
-                        delta = new - old
-                        total_penalty = -self.rewards[k] * delta
-                        net_reward += total_penalty
-                        print('3')
-                        if delta > 0:
-                            done = True
-                    except:
-                        None                     
+                # else:
+                #     try:
+                #         new = int(new_observation['output_data'][k])    
+                #         old = int(last_obs['output_data'][k])
+                #         delta = new - old
+                #         total_penalty = -self.rewards[k] * delta
+                #         net_reward += total_penalty
+                #         print('3')
+                #         if delta > 0:
+                #             done = True
+                #     except:
+                #         None                     
 
 
         tur_hps = {'tur_outer':5000, 'tur_inner':3600, 'tur_inhib':3300, 
@@ -287,11 +301,11 @@ class DQNAgent:
         # self.model = self.create_model()
 
         # Loading from first run
-        self.model = tf.keras.models.load_model('dql_models4/2X12__ep___45.00_-200.00max_-11443.00avg_-22686.00min__1594957431.model')
+        self.model = tf.keras.models.load_model('dql_models4/2X12__ep__110.00_-200.00max_-499189.74avg_-998179.48min__1595316126.model')
 
         # target model --> this is what we .predict against every step
         # self.target_model = self.create_model() 
-        self.target_model = tf.keras.models.load_model('dql_models4/2X12__ep___45.00_-200.00max_-11443.00avg_-22686.00min__1594957431.model')
+        self.target_model = tf.keras.models.load_model('dql_models4./2X12__ep__110.00_-200.00max_-499189.74avg_-998179.48min__1595316126.model')
         self.target_model.set_weights(self.model.get_weights())
 
         # handles batch samples so to attain stability in training; prevent overfitting
@@ -398,7 +412,7 @@ for episode in tqdm(range(1, EPISODES+1), ascii=True, unit='episode'):
         agent.update_replay_memory((current_state, action, reward, new_state, done))
         agent.train(done, step)
 
-        current_state = new_state.copy()
+        current_state = copy.deepcopy(new_state)
         step += 1
     
     # NEED TO ADD FUNCTION TO SAVE EVERY EPISODE!!! --> every 5 episodes?
@@ -416,8 +430,8 @@ for episode in tqdm(range(1, EPISODES+1), ascii=True, unit='episode'):
         if average_reward >= MIN_REWARD:
             agent.model.save(f'dql_best_avg/{MODEL_NAME}__{max_reward:_>7.2f}max_{average_reward:_>7.2f}avg_{min_reward:_>7.2f}min__{int(time.time())}.model')
 
-    if (episode+45)%5 == 0:
-        agent.model.save(f'dql_models4/{MODEL_NAME}__ep_{episode+45:_>7.2f}_{max_reward:_>7.2f}max_{average_reward:_>7.2f}avg_{min_reward:_>7.2f}min__{int(time.time())}.model')
+    if (episode+FROM)%5 == 0:
+        agent.model.save(f'dql_models4/{MODEL_NAME}__ep_{episode+FROM:_>7.2f}_{max_reward:_>7.2f}max_{average_reward:_>7.2f}avg_{min_reward:_>7.2f}min__{int(time.time())}.model')
 
     print('avg_reward:', average_reward)
     print('min_reward:', min_reward)
