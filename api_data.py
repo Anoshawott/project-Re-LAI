@@ -19,7 +19,6 @@ def realtime_capture(wincap=None):
         
         r = requests.get("https://127.0.0.1:2999/liveclientdata/allgamedata", verify=False)
         data = r.json()
-        print(data)
         thing = ['currentHealth', 'resourceValue']
         new_dict = {}
         for i in thing:
@@ -29,7 +28,6 @@ def realtime_capture(wincap=None):
         # print(len(data['allPlayers']))
         # print(data['allPlayers']['championName'])
         for i in range(0,len(data['allPlayers'])):
-            print(i)
             if data['allPlayers'][i]['championName'] == 'Ahri':
                 print(data['allPlayers'][i]['scores'])
                 thing2 = ['assists', 'creepScore', 'deaths', 'kills', 'wardScore']
