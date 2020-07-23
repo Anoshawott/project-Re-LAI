@@ -19,8 +19,9 @@ import os
 import subprocess
 import pickle
 import copy
+import subprocess
 
-FROM = 110
+FROM = 235
 
 REPLAY_MEMORY_SIZE = 50_000
 MIN_REPLAY_MEMORY_SIZE = 1000
@@ -90,11 +91,11 @@ class AIEnv:
         net_reward = 0
         # Reward and Penalty Conditions
         try:
-            if int(new_observation['output_data']['hp']) == 0:
+            if int(new_observation['output_data']['d']) == 1: #int(new_observation['output_data']['hp']) == 0
                 done = True
-                new = int(new_observation['output_data']['d'])    
-                old = int(last_obs['output_data']['d'])
-                delta = new - old
+                # new = int(new_observation['output_data']['d'])    
+                # old = int(last_obs['output_data']['d'])
+                delta = 1
                 total_penalty = -self.rewards['d'] * delta
                 net_reward += total_penalty
                 print('DEAD!')
@@ -120,12 +121,13 @@ class AIEnv:
                         new = int(new_observation['output_data'][k])
                         old = int(last_obs['output_data'][k])
                         delta = new - old
+                        print(k)
                         if delta < 0:
                             total_penalty = self.rewards[k] * delta
                             net_reward += total_penalty
                             print('1')
                         elif delta > 0:
-                            if k != 'cs':
+                            if k == 'hp' or k == 'mana':
                                 total_reward = self.rewards[k] * delta * 0.001
                             else:
                                 total_reward = self.rewards[k] * delta
@@ -301,11 +303,11 @@ class DQNAgent:
         # self.model = self.create_model()
 
         # Loading from first run
-        self.model = tf.keras.models.load_model('dql_models4/2X12__ep__110.00_-200.00max_-499189.74avg_-998179.48min__1595316126.model')
+        self.model = tf.keras.models.load_model('dql_models4/2X12__ep__235.00_-200.00max_-501909.33avg_-1003618.66min__1595411064.model')
 
         # target model --> this is what we .predict against every step
         # self.target_model = self.create_model() 
-        self.target_model = tf.keras.models.load_model('dql_models4./2X12__ep__110.00_-200.00max_-499189.74avg_-998179.48min__1595316126.model')
+        self.target_model = tf.keras.models.load_model('dql_models4/2X12__ep__235.00_-200.00max_-501909.33avg_-1003618.66min__1595411064.model')
         self.target_model.set_weights(self.model.get_weights())
 
         # handles batch samples so to attain stability in training; prevent overfitting
@@ -388,7 +390,7 @@ for i in list(range(4))[::-1]:
     print(i+1)
     time.sleep(1)
 
-for episode in tqdm(range(1, EPISODES+1), ascii=True, unit='episode'):
+for episode in tqdm(range(1, EPISODES+1), ascii=True, unit='episode', initial=FROM):
     agent.tensorboard.step = episode
 
     episode_reward = 0
@@ -404,16 +406,22 @@ for episode in tqdm(range(1, EPISODES+1), ascii=True, unit='episode'):
         else:
             action = np.random.randint(0,env.ACTION_SPACE_SIZE)
         print(step)
-        new_state, reward, done, num = env.step(action=action, last_obs=current_state, count=num)
-        
-        episode_reward += reward
-        print('episode_reward:', episode_reward)
-        print('-------------------')
-        agent.update_replay_memory((current_state, action, reward, new_state, done))
-        agent.train(done, step)
+        try:
+            new_state, reward, done, num = env.step(action=action, last_obs=current_state, count=num)
+            episode_reward += reward
+            print('episode_reward:', episode_reward)
+            print('-------------------')
+            agent.update_replay_memory((current_state, action, reward, new_state, done))
+            agent.train(done, step)
 
-        current_state = copy.deepcopy(new_state)
-        step += 1
+            current_state = copy.deepcopy(new_state)
+            step += 1
+        except:
+            time.sleep(40)
+            done = True
+            subprocess.call("taskkill /f /im \"LeagueClient.exe\"", shell=True)
+            time.sleep(5)
+        
     
     # NEED TO ADD FUNCTION TO SAVE EVERY EPISODE!!! --> every 5 episodes?
 

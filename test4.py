@@ -56,8 +56,7 @@ def thing(last_obs=None, count=None):
                 del tmp_old['output_data'][i[0]]
             for k in tmp_new['output_data']:
                 if k == 'cs' or k == 'level' or k == 'k' or k == 'a' or k == 'hp' or k == 'mana':
-                    if k == 'cs':
-                        print(k)
+                    print(k)
                     try:
                         new = int(new_observation['output_data'][k])
                         old = int(last_obs['output_data'][k])
@@ -67,7 +66,7 @@ def thing(last_obs=None, count=None):
                             net_reward += total_penalty
                             print('1')
                         elif delta > 0:
-                            if k != 'cs':
+                            if k == 'hp' or k == 'mana':
                                 total_reward = rewards[k] * delta * 0.001
                             else:
                                 total_reward = rewards[k] * delta
